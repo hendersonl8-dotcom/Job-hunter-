@@ -59,7 +59,7 @@ def load_resume() -> dict | None:
 
 
 def save_resume(resume: dict) -> Path:
-    return _write_json(resume_path(), resume)
+    return write_json(resume_path(), resume)
 
 
 def load_profile() -> dict:
@@ -67,11 +67,13 @@ def load_profile() -> dict:
 
 
 def save_profile(profile: dict) -> Path:
-    return _write_json(profile_path(), profile)
+    return write_json(profile_path(), profile)
 
 
-def _write_json(path: Path, data: dict) -> Path:
+def write_json(path: str | Path, data: dict) -> Path:
     """Replace the file whole, keeping the previous version as <name>.bak."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():
         shutil.copy2(path, path.with_suffix(path.suffix + ".bak"))
     tmp = path.with_suffix(path.suffix + ".tmp")

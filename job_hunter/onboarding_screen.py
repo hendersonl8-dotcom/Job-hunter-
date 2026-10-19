@@ -72,7 +72,7 @@ def render(settings: Settings) -> None:
 
     st.caption(f"Also found: {len(facts.experience)} roles, {len(facts.projects)} projects, "
                f"{len(facts.education)} education entries, {len(facts.certifications)} certifications. "
-               "You can fine-tune the details later in config/resume.json.")
+               "You can fine-tune the details later in resume.json in your data folder (see the README).")
 
     if st.button("Save and start", type="primary"):
         if not facts.tracks or not facts.experience:
