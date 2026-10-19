@@ -33,6 +33,9 @@ settings = load_settings()
 profile = Profile.load(settings.profile)
 conn = connection(str(settings.database))
 profile.corrections = Corrections(conn)
+if not settings.resume.exists():
+    st.info("No master resume yet. Add one to continue.")
+    st.stop()
 master = resumes.load_master(settings.resume)
 
 

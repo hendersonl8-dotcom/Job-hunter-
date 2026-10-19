@@ -1,4 +1,6 @@
-"""Settings from config/settings.toml, with secrets from environment variables."""
+"""Settings from config/settings.toml, with secrets from environment variables.
+
+Personal files (profile, resume, database) are in the per-user folder; see userdata.py."""
 
 from __future__ import annotations
 
@@ -7,14 +9,16 @@ import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+from . import userdata
+
+ROOT = userdata.ROOT
 
 
 @dataclass
 class Settings:
     database: Path
     profile: Path
-    resume: Path = ROOT / "config" / "resume.json"
+    resume: Path = Path("resume.json")
     claude_model: str = "claude-opus-5-5"
     claude_effort: str = "high"
     usajobs_keywords: list[str] = field(default_factory=list)
@@ -29,12 +33,13 @@ class Settings:
 def load_settings(path: str | Path | None = None) -> Settings:
     path = Path(path or os.environ.get("JOB_HUNTER_SETTINGS", ROOT / "config" / "settings.toml"))
     data = tomllib.loads(path.read_text(encoding="utf-8"))
+    home = userdata.user_dir()
     paths, usajobs, boards = data.get("paths", {}), data.get("usajobs", {}), data.get("boards", {})
     claude = data.get("claude", {})
     return Settings(
-        database=ROOT / paths.get("database", "data/jobs.db"),
-        profile=ROOT / paths.get("profile", "config/profile.json"),
-        resume=ROOT / paths.get("resume", "config/resume.json"),
+        database=home / paths.get("database", userdata.DATABASE_FILE),
+        profile=home / paths.get("profile", userdata.PROFILE_FILE),
+        resume=home / paths.get("resume", userdata.RESUME_FILE),
         claude_model=claude.get("model", "claude-opus-5-5"),
         claude_effort=claude.get("effort", "high"),
         usajobs_keywords=usajobs.get("keywords", []),

@@ -7,3 +7,6 @@ data/
 resumes/
 output/
 .env
+
+*.bak
+Job Hunter.cmd
