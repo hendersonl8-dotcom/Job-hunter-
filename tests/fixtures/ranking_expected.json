@@ -4,8 +4,8 @@
     {
       "title": "Systems Administrator (CNIC N6 Systems Administrator)",
       "employer": "Serco Inc.",
-      "expected_band": "strong",
-      "why": "Active Secret is within TS/SCI; AD, VMware, Windows Server, IIS, SQL all on Logan's resume; pay clears floor; Kitsap."
+      "expected_band": "stretch",
+      "why": "Requires IAT Level II (Security+), which Logan does not hold yet; earning it would move this back to strong."
     },
     {
       "title": "Systems Administrator 2 (posting title not confirmed; category listed as 'IT - Hardware')",
@@ -16,8 +16,8 @@
     {
       "title": "Windows Systems Engineer",
       "employer": "Amazon (AWS Utility Computing, Region Services Corporate Infrastructure)",
-      "expected_band": "strong",
-      "why": "Windows engineering with TS/SCI and top pay; closest match to his enclave/VM experience."
+      "expected_band": "good",
+      "why": "Strong skills and clearance match, but wants 5+ years Windows support and a full-scope polygraph."
     },
     {
       "title": "Systems Administration Lead/Manager",
@@ -40,8 +40,8 @@
     {
       "title": "Senior Systems Administrator",
       "employer": "Helion Energy",
-      "expected_band": "good",
-      "why": "Senior sysadmin, strong pay; seniority is a stretch but skills overlap."
+      "expected_band": "stretch",
+      "why": "Senior level in the energy domain is a reach despite strong pay."
     },
     {
       "title": "Systems Administrator",
@@ -64,8 +64,8 @@
     {
       "title": "Data Analyst",
       "employer": "Grey Matters Defense Solutions",
-      "expected_band": "strong",
-      "why": "Data analyst wanting TS/SCI, which Logan holds; BA Data Analytics and Power BI; top pay."
+      "expected_band": "good",
+      "why": "Wants 8+ years as an analyst; skills and TS/SCI fit, experience gap is hard."
     },
     {
       "title": "Business Data Analyst",
@@ -100,14 +100,20 @@
     {
       "title": "Sr. Project Manager",
       "employer": "SuperGraphics LLC",
-      "expected_band": "stretch",
-      "why": "Senior PM at $70-80k, at his floor and wants more PM years than he has."
+      "expected_band": "weak",
+      "why": "Pay is right at the $70k floor and wants more PM years than Logan has."
     },
     {
       "title": "Senior Technical Program Manager, AWS Hardware Engineering",
       "employer": "Amazon Web Services",
       "expected_band": "stretch",
       "why": "Senior technical program manager at AWS hardware; seniority and domain are a reach."
+    },
+    {
+      "title": "Systems Administrator",
+      "employer": "Netsimco, a Saalex Company",
+      "expected_band": "strong",
+      "why": "Active Secret, Windows Server, Keyport, $90k-$135k; no hard gap."
     }
   ]
 }
