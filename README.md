@@ -17,6 +17,10 @@ Pick any job and it tailors your resume and writes a cover letter for that posti
 
 ## Install on Windows
 
+**As a regular app (no Python needed):** run `JobHunter-Setup.exe` (built by the *Windows installer* GitHub Actions job, or locally with `packaging\build.ps1`). It adds Job Hunter to the Start Menu and Desktop; double-click it and the app opens in its own window. Closing the window stops it. Your data stays in `%LOCALAPPDATA%\JobHunter`.
+
+**From source:**
+
 1. Install Python 3.11 or newer from https://www.python.org/downloads/ (tick **Add python.exe to PATH**).
 2. Download this project (green **Code** button, **Download ZIP**, then unzip) or `git clone` it.
 3. In PowerShell, in the project folder:
@@ -59,14 +63,11 @@ If a request is declined by Claude's safety checks, it is retried automatically 
 ## Turn on USAJobs
 
 1. Request a free key at https://developer.usajobs.gov/apirequest/.
-2. Set it for your user account, then reopen PowerShell:
+2. Open **Find jobs**, expand **USAJobs key (one time)**, paste the key and your email, and press **Search now**. They are saved in your data folder (`search.json`), never in the project.
 
-```powershell
-setx USAJOBS_API_KEY "your-key"
-setx USAJOBS_EMAIL "the-email-you-registered@example.com"
-```
+(Setting `USAJOBS_API_KEY` and `USAJOBS_EMAIL` as environment variables still works and takes priority.)
 
-The search keywords, location and radius are in `config/settings.toml`, which is shared by everyone using this copy of the app.
+On **Find jobs** the search terms and location are pre-filled and editable, and you can tick Seattle-area Greenhouse and Lever company boards instead of editing `settings.toml`. LinkedIn and Glassdoor stay paste-only in **Add a job**.
 
 ## Load the Seattle shortlist
 

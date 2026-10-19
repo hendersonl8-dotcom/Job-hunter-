@@ -11,7 +11,7 @@ import pandas as pd
 import streamlit as st
 
 from job_hunter import cover_letter as letters
-from job_hunter import db, export, onboarding, onboarding_screen, outcomes_tab, resume_review_screen
+from job_hunter import db, export, find_screen, onboarding, onboarding_screen, outcomes_tab, resume_review_screen
 from job_hunter.backup import backup_database
 from job_hunter import resume as resumes
 from job_hunter.collect import CollectResult, collect, save_jobs
@@ -215,14 +215,14 @@ def apply_panel(job: dict, resume: dict, letter: dict | None) -> None:
 st.title("Job Hunter")
 st.caption(f"Scoring against your profile: {profile.clearance or 'no'} clearance, pay floor ${profile.min_salary:,.0f}.")
 
-jobs_tab, compare_tab, add_tab, find_tab, working_tab, review_tab = st.tabs(
-    ["Jobs", "Compare", "Add a job", "Find new jobs", "What's working", "Resume review"])
+find_tab, jobs_tab, compare_tab, add_tab, working_tab, review_tab = st.tabs(
+    ["Find jobs", "Jobs", "Compare", "Add a job", "What's working", "Resume review"])
 
 jobs = db.all_jobs(conn)
 
 with jobs_tab:
     if not jobs:
-        st.info("No jobs yet. Use **Find new jobs** or paste one in **Add a job**.")
+        st.info("No jobs yet. Use **Find jobs** or paste one in **Add a job**.")
     else:
         tracks = sorted({j["track"] for j in jobs})
         c1, c2, c3, c4 = st.columns(4)
@@ -342,25 +342,8 @@ with add_tab:
             st.success(f"Loaded {result.found} jobs, {result.added} new. They're in the **Jobs** tab.")
 
 with find_tab:
-    st.markdown(
-        f"Searches USAJobs ({len(settings.usajobs_keywords)} keywords around {settings.usajobs_location}), "
-        f"{len(settings.greenhouse_boards)} Greenhouse boards and {len(settings.lever_boards)} Lever boards "
-        "from `config/settings.toml`."
-    )
-    if not (settings.usajobs_api_key and settings.usajobs_email):
-        st.warning("USAJobs is off until you set USAJOBS_API_KEY and USAJOBS_EMAIL. See the README.")
-    c1, c2, c3 = st.columns(3)
-    if c1.button("Search now", type="primary"):
-        with st.spinner("Searching job sources..."):
-            result = collect(settings, conn, profile)
-        st.success(f"Found {result.found} jobs in your area, {result.added} new.")
-        if result.skipped_location:
-            st.caption(f"Left out {result.skipped_location} board jobs outside your area.")
-        for error in result.errors:
-            st.warning(error)
-    if c2.button("Re-score saved jobs"):
-        st.success(f"Re-scored {db.rescore(conn, profile)} jobs with your current profile.")
-    if c3.button("Back up the database"):
+    find_screen.render(settings, conn, profile)
+    if st.button("Back up the database"):
         copy = backup_database(settings.database)
         st.success(f"Saved a copy to {copy}") if copy else st.info("Nothing to back up yet.")
 
