@@ -14,6 +14,9 @@ ROOT = Path(__file__).resolve().parent.parent
 class Settings:
     database: Path
     profile: Path
+    resume: Path = ROOT / "config" / "resume.json"
+    claude_model: str = "claude-opus-5-5"
+    claude_effort: str = "high"
     usajobs_keywords: list[str] = field(default_factory=list)
     usajobs_location: str = "Seattle, Washington"
     usajobs_radius: int = 60
@@ -27,9 +30,13 @@ def load_settings(path: str | Path | None = None) -> Settings:
     path = Path(path or os.environ.get("JOB_HUNTER_SETTINGS", ROOT / "config" / "settings.toml"))
     data = tomllib.loads(path.read_text(encoding="utf-8"))
     paths, usajobs, boards = data.get("paths", {}), data.get("usajobs", {}), data.get("boards", {})
+    claude = data.get("claude", {})
     return Settings(
         database=ROOT / paths.get("database", "data/jobs.db"),
         profile=ROOT / paths.get("profile", "config/profile.json"),
+        resume=ROOT / paths.get("resume", "config/resume.json"),
+        claude_model=claude.get("model", "claude-opus-5-5"),
+        claude_effort=claude.get("effort", "high"),
         usajobs_keywords=usajobs.get("keywords", []),
         usajobs_location=usajobs.get("location", "Seattle, Washington"),
         usajobs_radius=int(usajobs.get("radius_miles", 60)),

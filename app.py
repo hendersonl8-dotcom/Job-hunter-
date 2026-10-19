@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import os
+import re
+
 import pandas as pd
 import streamlit as st
 
-from job_hunter import db
+from job_hunter import db, export
+from job_hunter import resume as resumes
 from job_hunter.collect import CollectResult, collect, save_jobs
 from job_hunter.config import load_settings
 from job_hunter.scoring import Profile
@@ -22,6 +26,7 @@ def connection(path: str):
 settings = load_settings()
 profile = Profile.load(settings.profile)
 conn = connection(str(settings.database))
+master = resumes.load_master(settings.resume)
 
 
 def money(low, high) -> str:
@@ -30,6 +35,67 @@ def money(low, high) -> str:
     if low == high or high is None:
         return f"${low:,.0f}"
     return f"${low:,.0f} – ${high:,.0f}"
+
+
+def file_stem(job: dict) -> str:
+    name = master["contact"]["name"].replace(" ", "_")
+    return re.sub(r"[^A-Za-z0-9_-]+", "_", f"{name}_{job['company']}_{job['title']}")[:90]
+
+
+def download_buttons(resume: dict, stem: str, prefix: str) -> None:
+    c1, c2 = st.columns(2)
+    c1.download_button("Download Word", export.to_docx(resume), f"{stem}.docx",
+                       "application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"{prefix}-docx")
+    c2.download_button("Download PDF", export.to_pdf(resume), f"{stem}.pdf", "application/pdf", key=f"{prefix}-pdf")
+
+
+def resume_panel(job: dict) -> None:
+    st.divider()
+    st.subheader("Resume for this job")
+    base = resumes.base_resume(master, job["track"])
+    saved = db.latest_document(conn, job["key"], "resume")
+    has_key = bool(os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN"))
+
+    label = "Re-tailor my resume" if saved else "Tailor my resume to this job"
+    if st.button(label, type="primary", disabled=not has_key, key=f"tailor-{job['key']}"):
+        with st.spinner("Claude is tailoring your resume. This takes about a minute..."):
+            try:
+                tailored, raw, warnings = resumes.tailor(master, job, model=settings.claude_model,
+                                                         effort=settings.claude_effort)
+            except Exception as exc:
+                st.error(f"Tailoring failed: {exc}")
+            else:
+                saved = {"resume": tailored, "changes": raw.changes, "gaps": raw.gaps, "warnings": warnings}
+                db.save_document(conn, job["key"], "resume", saved)
+    if not has_key:
+        st.caption("Set ANTHROPIC_API_KEY to turn on tailoring (see the README)."
+                   + ("" if saved else f" Meanwhile you can download your {job['track']} base resume below."))
+
+    if not saved:
+        st.markdown(f"**Base resume for the {job['track']} track**")
+        download_buttons(base, file_stem(job) + "_base", f"base-{job['key']}")
+        return
+
+    changes_tab, diff_tab, files_tab = st.tabs(["What changed", "Line by line", "Download"])
+    with changes_tab:
+        if saved["warnings"]:
+            st.warning("Double-check these before sending; they aren't in your master resume:\n\n"
+                       + "\n".join(f"- {w}" for w in saved["warnings"]))
+        st.markdown("\n".join(f"- {c}" for c in saved["changes"]) or "No changes listed.")
+        if saved["gaps"]:
+            st.markdown("**The posting asks for things your resume can't honestly claim yet:**")
+            st.markdown("\n".join(f"- {g}" for g in saved["gaps"]))
+    with diff_tab:
+        st.caption("Green lines are new or reworded for this job; red lines were cut or replaced.")
+        colors = {"+": "rgba(46,160,67,0.2)", "-": "rgba(248,81,73,0.2)", " ": "transparent"}
+        rows = "".join(
+            f'<div style="background:{colors[kind]};padding:1px 6px;white-space:pre-wrap">'
+            f'{"+ " if kind == "+" else "- " if kind == "-" else "  "}{text.replace("<", "&lt;")}</div>'
+            for kind, text in resumes.diff(base, saved["resume"])
+        )
+        st.markdown(f'<div style="font-size:0.85rem">{rows}</div>', unsafe_allow_html=True)
+    with files_tab:
+        download_buttons(saved["resume"], file_stem(job), f"tailored-{job['key']}")
 
 
 st.title("Job Hunter")
@@ -90,6 +156,7 @@ with jobs_tab:
                     if st.form_submit_button("Save"):
                         db.set_status(conn, key, status, notes)
                         st.rerun()
+            resume_panel(job)
 
 with compare_tab:
     keys = st.session_state.get("picked", [])

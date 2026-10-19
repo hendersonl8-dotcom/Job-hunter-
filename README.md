@@ -2,7 +2,7 @@
 
 Finds Seattle-area jobs, scores each one against your skills, and lets you compare them side by side.
 
-This is step 2 of the plan. Step 3 adds one-click resume tailoring, and step 4 adds the Apply button with a tailored cover letter.
+Pick any job and it tailors your resume to that posting with Claude, shows exactly what changed, and exports Word and PDF. Step 4 adds the Apply button with a tailored cover letter.
 
 ## What it does
 
@@ -11,6 +11,7 @@ This is step 2 of the plan. Step 3 adds one-click resume tailoring, and step 4 a
 - **Scores every job 0 to 100** and shows why: skills you have versus skills it asks for (70), clearance (10), pay against your floor (10), and location (10).
 - **Sorts jobs into tracks:** IT / Systems Admin, Data Analyst, Project Manager, Quality / Operations.
 - **Compares 2 to 4 jobs** side by side and tracks status (Saved, Applied, Interviewing and so on) with notes.
+- **Tailors your resume** to a job in one click: it reorders and rewords your own bullets toward the posting, lists what it changed and why, lists what the posting wants that you can't claim yet, and exports Word and PDF.
 
 ## Run it on Windows
 
@@ -23,6 +24,20 @@ py -3 -m venv .venv
 ```
 
 It opens in your browser at http://localhost:8501. Jobs are saved in `data\jobs.db`, which is not uploaded to GitHub.
+
+## Turn on resume tailoring
+
+Tailoring uses Claude (`claude-opus-5-5` by default, set in `config/settings.toml`). Create an API key at https://console.anthropic.com/, then:
+
+```powershell
+setx ANTHROPIC_API_KEY "sk-ant-..."
+```
+
+Reopen PowerShell and restart the app. Each tailored resume costs roughly 10 to 20 cents. Without a key you can still download the untailored base resume for each track.
+
+**Your facts stay yours.** Everything comes from `config/resume.json`, your master resume. Edit it when something changes; the tailoring never takes job titles, employers, dates, education or contact details from Claude, and any number, skill or certification it writes that isn't in your master resume is flagged in yellow before you download. Your phone number and email are never sent to Claude.
+
+If a request is declined by Claude's safety checks, it is retried automatically on a fallback model.
 
 ## Turn on USAJobs
 

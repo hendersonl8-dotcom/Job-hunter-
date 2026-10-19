@@ -37,6 +37,14 @@ CREATE TABLE IF NOT EXISTS jobs (
     notes        TEXT NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS jobs_dupe ON jobs (lower(title), lower(company));
+CREATE TABLE IF NOT EXISTS documents (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    job_key     TEXT NOT NULL REFERENCES jobs (key),
+    kind        TEXT NOT NULL,  -- resume, cover_letter
+    content     TEXT NOT NULL,  -- JSON
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS documents_job ON documents (job_key, kind);
 """
 
 _JOB_FIELDS = list(Job.__dataclass_fields__)
@@ -125,3 +133,15 @@ def rescore(conn: sqlite3.Connection, profile) -> int:
         count += 1
     conn.commit()
     return count
+
+
+def save_document(conn: sqlite3.Connection, job_key: str, kind: str, content: dict) -> None:
+    conn.execute("INSERT INTO documents (job_key, kind, content) VALUES (?, ?, ?)", (job_key, kind, json.dumps(content)))
+    conn.commit()
+
+
+def latest_document(conn: sqlite3.Connection, job_key: str, kind: str) -> dict | None:
+    row = conn.execute(
+        "SELECT content FROM documents WHERE job_key = ? AND kind = ? ORDER BY id DESC LIMIT 1", (job_key, kind)
+    ).fetchone()
+    return json.loads(row["content"]) if row else None

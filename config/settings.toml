@@ -3,6 +3,12 @@
 [paths]
 database = "data/jobs.db"
 profile = "config/profile.json"
+resume = "config/resume.json"
+
+[claude]
+# Used to tailor resumes. Needs ANTHROPIC_API_KEY set (see the README).
+model = "claude-opus-5-5"
+effort = "high"
 
 [usajobs]
 # One search per keyword. Set USAJOBS_API_KEY and USAJOBS_EMAIL to turn this on.
