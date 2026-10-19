@@ -7,6 +7,7 @@ automated applying, and accounts that use bots get restricted.
 from .greenhouse import fetch_greenhouse
 from .lever import fetch_lever
 from .manual import job_from_paste
+from .shortlist import jobs_from_csv
 from .usajobs import fetch_usajobs
 
-__all__ = ["fetch_greenhouse", "fetch_lever", "fetch_usajobs", "job_from_paste"]
+__all__ = ["fetch_greenhouse", "fetch_lever", "fetch_usajobs", "job_from_paste", "jobs_from_csv"]

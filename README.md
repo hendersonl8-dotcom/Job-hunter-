@@ -25,7 +25,7 @@ py -3 -m venv .venv
 .venv\Scripts\streamlit run app.py
 ```
 
-It opens in your browser at http://localhost:8501. Jobs are saved in `data\jobs.db`, which is not uploaded to GitHub.
+When it prints `Local URL: http://localhost:8501`, open that address in your browser. Leave PowerShell open while you use the app; closing it stops the app. Jobs are saved in `data\jobs.db`, which is not uploaded to GitHub.
 
 ## Turn on resume tailoring and cover letters
 
@@ -52,6 +52,10 @@ setx USAJOBS_EMAIL "the-email-you-registered@example.com"
 ```
 
 The search keywords, location and radius are in `config/settings.toml`.
+
+## Load the Seattle shortlist
+
+Open **Add a job** and press **Load seattle-sweep-2026-10-19** to add the 34 Seattle-area postings researched for you, scored against your profile. You can also upload any CSV with the same columns (title, employer, location, pay_min, pay_max, clearance, key_requirements, posting_url).
 
 ## Add company job boards
 
