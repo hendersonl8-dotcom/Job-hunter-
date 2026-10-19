@@ -11,7 +11,7 @@ import pandas as pd
 import streamlit as st
 
 from job_hunter import cover_letter as letters
-from job_hunter import db, export, outcomes_tab
+from job_hunter import db, export, onboarding, onboarding_screen, outcomes_tab
 from job_hunter.backup import backup_database
 from job_hunter import resume as resumes
 from job_hunter.collect import CollectResult, collect, save_jobs
@@ -30,6 +30,9 @@ def connection(path: str):
 
 
 settings = load_settings()
+if onboarding.needs_onboarding(settings.profile, settings.resume):
+    onboarding_screen.render(settings)
+    st.stop()
 profile = Profile.load(settings.profile)
 conn = connection(str(settings.database))
 profile.corrections = Corrections(conn)
