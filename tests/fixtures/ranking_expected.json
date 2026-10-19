@@ -1,0 +1,113 @@
+{
+  "_comment": "Expected fit bands are Claude's draft of Logan's judgment from his profile; Logan to confirm or adjust. Bands: strong, good, stretch, weak.",
+  "postings": [
+    {
+      "title": "Systems Administrator (CNIC N6 Systems Administrator)",
+      "employer": "Serco Inc.",
+      "expected_band": "strong",
+      "why": "Active Secret is within TS/SCI; AD, VMware, Windows Server, IIS, SQL all on Logan's resume; pay clears floor; Kitsap."
+    },
+    {
+      "title": "Systems Administrator 2 (posting title not confirmed; category listed as 'IT - Hardware')",
+      "employer": "HII Mission Technologies",
+      "expected_band": "strong",
+      "why": "Wants TS/SCI which Logan holds; mid-level sysadmin matches his enclave and VM work."
+    },
+    {
+      "title": "Windows Systems Engineer",
+      "employer": "Amazon (AWS Utility Computing, Region Services Corporate Infrastructure)",
+      "expected_band": "strong",
+      "why": "Windows engineering with TS/SCI and top pay; closest match to his enclave/VM experience."
+    },
+    {
+      "title": "Systems Administration Lead/Manager",
+      "employer": "SAIC",
+      "expected_band": "good",
+      "why": "Lead/manager sysadmin; his Navy supervision fits but years of civilian sysadmin experience may fall short."
+    },
+    {
+      "title": "Systems Administrator",
+      "employer": "Not named on posting (a public-sector district is mentioned)",
+      "expected_band": "good",
+      "why": "Sysadmin in Seattle at $70-80k, right at his floor; clearance is a lever but pay is the cap."
+    },
+    {
+      "title": "Lead Senior Computer Systems Administrator",
+      "employer": "Imagine One Technology & Management, Ltd.",
+      "expected_band": "good",
+      "why": "Keyport lead sysadmin; pay range dips below $70k at the bottom but tops at $120k."
+    },
+    {
+      "title": "Senior Systems Administrator",
+      "employer": "Helion Energy",
+      "expected_band": "good",
+      "why": "Senior sysadmin, strong pay; seniority is a stretch but skills overlap."
+    },
+    {
+      "title": "Systems Administrator",
+      "employer": "PitchBook Data",
+      "expected_band": "good",
+      "why": "Corporate sysadmin, good pay, no clearance edge."
+    },
+    {
+      "title": "SCADA Systems Administrator",
+      "employer": "King County",
+      "expected_band": "stretch",
+      "why": "SCADA/OT systems are outside his background."
+    },
+    {
+      "title": "CAD Administrator",
+      "employer": "Anduril Industries",
+      "expected_band": "weak",
+      "why": "CAD administration is design tooling, not infrastructure."
+    },
+    {
+      "title": "Data Analyst",
+      "employer": "Grey Matters Defense Solutions",
+      "expected_band": "strong",
+      "why": "Data analyst wanting TS/SCI, which Logan holds; BA Data Analytics and Power BI; top pay."
+    },
+    {
+      "title": "Business Data Analyst",
+      "employer": "Lynden Incorporated",
+      "expected_band": "good",
+      "why": "Business data analyst in Seattle, pay clears floor; fits BA and Google certificate."
+    },
+    {
+      "title": "Data Analyst 3, Supply Chain Inventory",
+      "employer": "Nordstrom",
+      "expected_band": "good",
+      "why": "Large-company data analyst, hybrid Seattle, strong pay; he lacks Tableau."
+    },
+    {
+      "title": "Data Analyst II",
+      "employer": "Echodyne Corp",
+      "expected_band": "good",
+      "why": "Data analyst II at a defense-adjacent firm in Kirkland; pay clears floor."
+    },
+    {
+      "title": "Epic Data Analyst II",
+      "employer": "HealthPoint",
+      "expected_band": "stretch",
+      "why": "Needs Epic, a healthcare system he has no experience with."
+    },
+    {
+      "title": "Deputy Program Manager, Customer Support Services",
+      "employer": "SAIC",
+      "expected_band": "good",
+      "why": "Deputy PM with TS/SCI-level work in Bremerton; Navy supervision fits, no PMP."
+    },
+    {
+      "title": "Sr. Project Manager",
+      "employer": "SuperGraphics LLC",
+      "expected_band": "stretch",
+      "why": "Senior PM at $70-80k, at his floor and wants more PM years than he has."
+    },
+    {
+      "title": "Senior Technical Program Manager, AWS Hardware Engineering",
+      "employer": "Amazon Web Services",
+      "expected_band": "stretch",
+      "why": "Senior technical program manager at AWS hardware; seniority and domain are a reach."
+    }
+  ]
+}
