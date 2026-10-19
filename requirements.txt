@@ -1,0 +1,7 @@
+streamlit>=1.46
+requests>=2.31
+pandas>=2.0
+anthropic>=1.15
+pydantic>=2.7
+python-docx>=1.1
+fpdf2>=2.8

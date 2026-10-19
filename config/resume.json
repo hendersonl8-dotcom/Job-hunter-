@@ -1,0 +1,113 @@
+{
+  "_comment": "Your master resume: every true fact the tailoring can draw from. Tailoring may reorder, trim and reword these, but never adds facts that are not here. Edit this file when something changes.",
+  "contact": {
+    "name": "Logan Henderson",
+    "email": "LoganHendersonNavy97@outlook.com",
+    "phone": "940-999-4151",
+    "linkedin": "linkedin.com/in/loganmhenderson",
+    "github": "github.com/hendersonl8-dotcom",
+    "location": "Seattle, WA",
+    "clearance": "Active TS/SCI"
+  },
+  "tracks": {
+    "IT / Systems Admin": {
+      "headline": "Systems Administrator | Active TS/SCI",
+      "summary": "Navy technical leader with 7 years running mission-critical Linux and Windows systems, now completing Microsoft's Server and Cloud Administration program. Stood up three isolated network enclaves (270 virtual machines) across two bases, and automates administration with PowerShell and Python. Holds an active TS/SCI clearance."
+    },
+    "Data Analyst": {
+      "headline": "Data Analyst | BA Data Analytics | Active TS/SCI",
+      "summary": "Data analyst with a BA in Data Analytics and 7 years turning operational data into decisions for Navy senior leadership. Built readiness and operations reporting, Python and Logic Apps dashboards, and post-deployment analyses from thousands of records. Works in SQL, KQL, Python, Power BI and Excel."
+    },
+    "Project Manager": {
+      "headline": "IT Project Manager | Active TS/SCI",
+      "summary": "Navy operations planning lead who delivered multi-site IT infrastructure projects: three network enclaves (270 VMs across two bases and six buildings) and a 34-workstation operations center with a secure SCIF. Led teams of up to 20, coordinated contractors and procurement through Jira, and reported status to senior leadership."
+    },
+    "Quality / Operations": {
+      "headline": "Quality Assurance and Operations Supervisor | Active TS/SCI",
+      "summary": "Navy-certified Quality Assurance and Work Center Supervisor with 7 years leading technical teams. Wrote, reviewed and approved maintenance work packages against quality requirements, kept a Linux-based sonar system at 100% mission readiness, and administered qualification standards for 154 sailors."
+    },
+    "Other": {
+      "headline": "IT and Operations Professional | Active TS/SCI",
+      "summary": "Navy veteran with 7 years of technical leadership across systems administration, data analysis and operations planning, completing Microsoft's Server and Cloud Administration program. Holds a BA in Data Analytics and an active TS/SCI clearance."
+    }
+  },
+  "skills": {
+    "Systems": ["Active Directory", "ADFS", "Windows Server", "Linux (Ubuntu)", "Hyper-V", "VMware", "Networking"],
+    "Cloud and Automation": ["Microsoft Azure", "PowerShell", "Python", "Azure Logic Apps", "Terraform", "Git and GitHub Actions"],
+    "Data": ["SQL", "KQL", "Power BI", "Excel", "Data Analytics"],
+    "Operations": ["Project planning", "Jira", "Quality assurance", "Disaster management", "Team leadership", "Training and qualification"]
+  },
+  "experience": [
+    {
+      "title": "Server and Cloud Administration Program",
+      "org": "Microsoft Software and Systems Academy (MSSA)",
+      "location": "",
+      "dates": "Aug 2026 – Dec 2026",
+      "bullets": [
+        "Completing a 17-week Microsoft program in Azure, Windows Server administration, PowerShell scripting, identity and access management, and network services.",
+        "Deploying, configuring and securing hybrid cloud environments in hands-on labs, using infrastructure-as-code and automation to streamline administration.",
+        "Preparing for the AZ-900, AZ-500 and DP-300 Microsoft certification exams alongside a cohort of transitioning service members."
+      ]
+    },
+    {
+      "title": "Operations Planning Leading Petty Officer",
+      "org": "U.S. Navy, Unmanned Underwater Vehicle Operations Center",
+      "location": "",
+      "dates": "Oct 2023 – Aug 2026",
+      "bullets": [
+        "Led a 20-person team planning and executing 200+ autonomous undersea vehicle operations across multiple locations, coordinating personnel, equipment and training so every team was mission ready.",
+        "Led the standup of three isolated network enclaves, each running 90 virtual machines (270 total), scaling vehicle piloting and communications across two bases and six buildings.",
+        "Designed the enclaves end to end, covering infrastructure planning, hardware and asset provisioning, procurement, deployment timelines and site readiness.",
+        "Planned the build-out of an operations center in a converted bank building from blueprints: watch floor layout, displays, network cabling and 34 workstations, with contractors managed through Jira work orders and a TS/SCI space (SCIF) for the secure network.",
+        "Built PowerShell and Python automation that fed vehicle data into a dashboard and Excel reports so operators could run missions while the piloting software was still in development.",
+        "Developed Azure Logic Apps that pulled data from vehicle information databases and emails into dashboards and Excel reports for watchstanders.",
+        "Compiled and analyzed operational reporting for globally deployed teams from log sets, database tools and piloting software, briefing senior leadership on decision points for large-scale operations.",
+        "Tracked operator proficiency, certification status and readiness across all teams, giving senior leadership the data for resourcing and staffing decisions.",
+        "Used performance and readiness data to find training gaps and refine vehicle software and pilot training programs.",
+        "Supported vehicle software improvements and secure system configurations across multiple sites under TS/SCI security and compliance requirements."
+      ]
+    },
+    {
+      "title": "Sonar Technician Supervisor",
+      "org": "U.S. Navy, USS Georgia (SSGN 729)",
+      "location": "",
+      "dates": "Nov 2019 – Sep 2023",
+      "bullets": [
+        "Supervised a 15-member work center operating, maintaining and troubleshooting a Linux-based sonar system across four deployments, keeping it at 100% mission readiness.",
+        "Wrote, reviewed and approved maintenance work packages against shipboard Quality Assurance requirements as a certified QA and Work Center Supervisor for a 7-person division.",
+        "Administered Navy qualification standards for 154 sailors as Ship's Qualification Administrator, tracking progress and coordinating qualification boards and training.",
+        "Directed sonar operators as On-Watch Sonar Supervisor, detecting, classifying and tracking contacts and briefing senior leadership in real time.",
+        "Analyzed thousands of sonar contact entries after deployments to produce reports that shaped future mission planning and operator training.",
+        "Served as liaison between ship leadership and a special operations team, coordinating schedules and mission plans."
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "AD Lifecycle Toolkit",
+      "link": "github.com/hendersonl8-dotcom/ADLifeCycleToolKit",
+      "bullets": [
+        "PowerShell module that automates Active Directory onboarding and offboarding from CSV, with -WhatIf support, idempotent re-runs and a CSV audit trail; Pester tests and PSScriptAnalyzer run in GitHub Actions CI."
+      ]
+    },
+    {
+      "name": "EventLog Pipeline",
+      "link": "github.com/hendersonl8-dotcom/EventLog-Pipeline",
+      "bullets": [
+        "Python pipeline that ingests Windows System, Application and Security event logs into SQLite on a Task Scheduler schedule, with schema migrations, retention purges and a Streamlit dashboard."
+      ]
+    }
+  ],
+  "education": [
+    {"name": "BA, Data Analytics", "detail": "", "dates": "May 2023"},
+    {"name": "Google Data Analytics certificate", "detail": "", "dates": "Jun 2025"}
+  ],
+  "certifications": [
+    "Active TS/SCI security clearance",
+    "U.S. Navy Quality Assurance and Work Center Supervisor",
+    "MS-904 (Nov 2026)"
+  ],
+  "awards": [
+    "Junior Sailor of the Year (twice), UUVGRU-1, for watch standing and mission planning"
+  ]
+}
