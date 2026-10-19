@@ -34,7 +34,8 @@ CREATE TABLE IF NOT EXISTS jobs (
     missing      TEXT,
     reasons      TEXT,
     status       TEXT NOT NULL DEFAULT 'New',
-    notes        TEXT NOT NULL DEFAULT ''
+    notes        TEXT NOT NULL DEFAULT '',
+    applied_at   TEXT
 );
 CREATE INDEX IF NOT EXISTS jobs_dupe ON jobs (lower(title), lower(company));
 CREATE TABLE IF NOT EXISTS documents (
@@ -57,6 +58,10 @@ def connect(path: str | Path) -> sqlite3.Connection:
     conn = sqlite3.connect(path, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.executescript(SCHEMA)
+    columns = {row["name"] for row in conn.execute("PRAGMA table_info(jobs)")}
+    if "applied_at" not in columns:  # databases created before the Apply button
+        conn.execute("ALTER TABLE jobs ADD COLUMN applied_at TEXT")
+        conn.commit()
     return conn
 
 
@@ -145,3 +150,11 @@ def latest_document(conn: sqlite3.Connection, job_key: str, kind: str) -> dict |
         "SELECT content FROM documents WHERE job_key = ? AND kind = ? ORDER BY id DESC LIMIT 1", (job_key, kind)
     ).fetchone()
     return json.loads(row["content"]) if row else None
+
+
+def mark_applied(conn: sqlite3.Connection, key: str, when: str) -> None:
+    """Set the job to Applied, keeping the first date you applied if you press Apply again."""
+    conn.execute(
+        "UPDATE jobs SET status = 'Applied', applied_at = COALESCE(applied_at, ?) WHERE key = ?", (when, key)
+    )
+    conn.commit()

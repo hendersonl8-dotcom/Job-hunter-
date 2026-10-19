@@ -158,3 +158,71 @@ def to_pdf(resume: dict) -> bytes:
         for award in resume["awards"]:
             bullet(award)
     return bytes(pdf.output())
+
+
+def letter_to_docx(letter: dict) -> bytes:
+    doc = Document()
+    style = doc.styles["Normal"]
+    style.font.name = "Calibri"
+    style.font.size = Pt(11)
+    for section in doc.sections:
+        section.left_margin = section.right_margin = Pt(72)
+        section.top_margin = section.bottom_margin = Pt(60)
+
+    def para(text, bold=False, size=None, align=None, space_after=8):
+        p = doc.add_paragraph()
+        run = p.add_run(text)
+        run.bold = bold
+        if size:
+            run.font.size = Pt(size)
+        if align is not None:
+            p.alignment = align
+        p.paragraph_format.space_after = Pt(space_after)
+
+    contact = letter["contact"]
+    para(contact["name"], bold=True, size=16, space_after=0)
+    para(contact_line(contact), size=9, space_after=18)
+    para(letter["date"])
+    for line in letter["recipient"]:
+        if line:
+            para(line, space_after=0)
+    para("", space_after=4)
+    para(letter["subject"], bold=True)
+    para(letter["greeting"])
+    for paragraph in letter["paragraphs"]:
+        para(paragraph)
+    para(letter["closing"], space_after=24)
+    para(letter["signature"])
+
+    buffer = io.BytesIO()
+    doc.save(buffer)
+    return buffer.getvalue()
+
+
+def letter_to_pdf(letter: dict) -> bytes:
+    pdf = FPDF(format="Letter")
+    pdf.set_margins(25, 22, 25)
+    pdf.set_auto_page_break(True, margin=20)
+    pdf.add_page()
+    width = pdf.w - pdf.l_margin - pdf.r_margin
+
+    def line(text, style="", size=11, gap=4):
+        pdf.set_font("Helvetica", style, size)
+        pdf.multi_cell(width, size * 0.5, _pdf_text(text), align="L", new_x="LMARGIN", new_y="NEXT")
+        pdf.ln(gap)
+
+    contact = letter["contact"]
+    line(contact["name"], "B", 16, 0)
+    line(contact_line(contact), "", 8.5, 8)
+    line(letter["date"])
+    for item in letter["recipient"]:
+        if item:
+            line(item, gap=0)
+    pdf.ln(4)
+    line(letter["subject"], "B")
+    line(letter["greeting"])
+    for paragraph in letter["paragraphs"]:
+        line(paragraph)
+    line(letter["closing"], gap=10)
+    line(letter["signature"])
+    return bytes(pdf.output())
