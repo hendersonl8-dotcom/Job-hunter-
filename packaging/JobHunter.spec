@@ -5,7 +5,7 @@ from PyInstaller.utils.hooks import collect_all, collect_submodules
 ROOT = os.path.dirname(SPECPATH)  # spec paths resolve against the spec folder
 
 datas = [(os.path.join(ROOT, n), n if os.path.isdir(os.path.join(ROOT, n)) else ".") for n in ("app.py", "config", "shortlists", ".streamlit", "assets")]
-binaries, 
+binaries, hiddenimports = [], collect_submodules("job_hunter")  # app.py is data, so list its imports here
 for pkg in ("streamlit", "webview", "anthropic", "docx", "fpdf", "pypdf", "pandas"):
     try:
         d, b, h = collect_all(pkg)
