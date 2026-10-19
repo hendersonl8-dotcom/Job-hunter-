@@ -10,3 +10,7 @@ output/
 
 *.bak
 Job Hunter.cmd
+.build-venv/
+build/
+dist/
+installer/
