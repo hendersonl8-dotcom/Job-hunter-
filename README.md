@@ -17,6 +17,10 @@ Pick any job and it tailors your resume and writes a cover letter for that posti
 
 ## Install on Windows
 
+**As a regular app (no Python needed):** run `JobHunter-Setup.exe` (built by the *Windows installer* GitHub Actions job, or locally with `packaging\build.ps1`). It adds Job Hunter to the Start Menu and Desktop; double-click it and the app opens in its own window. Closing the window stops it. Your data stays in `%LOCALAPPDATA%\JobHunter`.
+
+**From source:**
+
 1. Install Python 3.11 or newer from https://www.python.org/downloads/ (tick **Add python.exe to PATH**).
 2. Download this project (green **Code** button, **Download ZIP**, then unzip) or `git clone` it.
 3. In PowerShell, in the project folder:
