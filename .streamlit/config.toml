@@ -1,0 +1,6 @@
+[server]
+# Skips Streamlit's first-run email prompt, which otherwise stops the app from starting.
+headless = true
+
+[browser]
+gatherUsageStats = false

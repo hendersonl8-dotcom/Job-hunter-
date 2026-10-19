@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import csv
 import os
 import re
 from datetime import date
@@ -13,9 +14,9 @@ from job_hunter import cover_letter as letters
 from job_hunter import db, export
 from job_hunter import resume as resumes
 from job_hunter.collect import CollectResult, collect, save_jobs
-from job_hunter.config import load_settings
+from job_hunter.config import ROOT, load_settings
 from job_hunter.scoring import Profile
-from job_hunter.sources import job_from_paste
+from job_hunter.sources import job_from_paste, jobs_from_csv
 
 st.set_page_config(page_title="Job Hunter", page_icon="🧭", layout="wide")
 
@@ -294,6 +295,24 @@ with add_tab:
                 fit = profile.score(job)
                 st.success(f"Added **{job.title}**: fit {fit.score}/100, {fit.track} track." if result.added
                            else f"Updated **{job.title}**, which was already saved: fit {fit.score}/100.")
+
+    st.divider()
+    st.markdown("**Import a job list** saved as CSV, such as the Seattle shortlists from your project.")
+    for path in sorted((ROOT / "shortlists").glob("*.csv")):
+        if st.button(f"Load {path.stem}", key=f"load-{path.name}"):
+            result = CollectResult()
+            save_jobs(conn, profile, jobs_from_csv(path.read_text(encoding="utf-8")), result, filter_location=False)
+            st.success(f"Loaded {result.found} jobs, {result.added} new. They're in the **Jobs** tab.")
+    upload = st.file_uploader("Or upload a CSV", type="csv")
+    if upload and st.button("Import uploaded list"):
+        try:
+            jobs = jobs_from_csv(upload.getvalue().decode("utf-8-sig"))
+        except (UnicodeDecodeError, csv.Error) as exc:
+            st.error(f"Couldn't read that file: {exc}")
+        else:
+            result = CollectResult()
+            save_jobs(conn, profile, jobs, result, filter_location=False)
+            st.success(f"Loaded {result.found} jobs, {result.added} new. They're in the **Jobs** tab.")
 
 with find_tab:
     st.markdown(
