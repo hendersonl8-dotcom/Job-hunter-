@@ -1,9 +1,7 @@
 # Job Hunter settings. Secrets (the USAJobs key) go in environment variables, not here.
 
-[paths]
-database = "data/jobs.db"
-profile = "config/profile.json"
-resume = "config/resume.json"
+# Your profile, master resume and database live in your own data folder, not here
+# (see "Where your data lives" in the README). A [paths] section is optional.
 
 [claude]
 # Used to tailor resumes. Needs ANTHROPIC_API_KEY set (see the README).

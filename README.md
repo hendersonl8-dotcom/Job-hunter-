@@ -15,17 +15,32 @@ Pick any job and it tailors your resume and writes a cover letter for that posti
 - **Writes a cover letter** for the job from the same facts, exported as Word and PDF.
 - **Apply button:** asks you to confirm before anything happens, hands you the tailored resume and cover letter to download, marks the job Applied with today's date, and opens the employer's application page. You do the final submit on their site, so nothing is ever sent in your name without you seeing it.
 
-## Run it on Windows
+## Install on Windows
 
-From PowerShell, in the project folder:
+1. Install Python 3.11 or newer from https://www.python.org/downloads/ (tick **Add python.exe to PATH**).
+2. Download this project (green **Code** button, **Download ZIP**, then unzip) or `git clone` it.
+3. In PowerShell, in the project folder:
 
 ```powershell
-py -3 -m venv .venv
-.venv\Scripts\python -m pip install -r requirements.txt
-.venv\Scripts\streamlit run app.py
+powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
-When it prints `Local URL: http://localhost:8501`, open that address in your browser. Leave PowerShell open while you use the app; closing it stops the app. Jobs are saved in `data\jobs.db`, which is not uploaded to GitHub.
+That creates the virtual environment, installs the requirements and puts a **Job Hunter** shortcut on your Desktop. Double-click it to start the app, then open `http://localhost:8501` if the browser doesn't open by itself. Closing the black window stops the app. To update later, replace the project files (or `git pull`) and run the installer again; your data is not touched.
+
+Prefer to do it by hand? `py -3 -m venv .venv`, then `.venv\Scripts\python -m pip install -r requirements.txt`, then `.venv\Scripts\streamlit run app.py`.
+
+## Where your data lives
+
+Your profile, master resume, job database, backups and every generated resume and letter are stored per user in `%LOCALAPPDATA%\JobHunter` (on Mac or Linux, `~/.local/share/job-hunter`), not in the project folder. Each person who signs in to the PC with their own Windows account gets their own copy, and updating or re-downloading the app never touches it. Set the `JOB_HUNTER_HOME` environment variable to use a different folder, for example to keep a second profile.
+
+| File | What it is |
+| --- | --- |
+| `profile.json` | Your skills, clearance, pay floor and locations (scoring) |
+| `resume.json` | Your master resume |
+| `jobs.db` | Saved jobs, status, notes, outcomes, tailored resumes and letters |
+| `backups\` | Timestamped copies of `jobs.db` |
+
+**Upgrading from the older layout** (files in the project's `config\` and `data\` folders): on first launch the app copies your `profile.json`, `resume.json` and `jobs.db` into the new folder, after saving a backup of the database. The old files are left where they were, so nothing is lost; you can delete them once you're happy.
 
 ## Turn on resume tailoring and cover letters
 
@@ -37,7 +52,7 @@ setx ANTHROPIC_API_KEY "sk-ant-..."
 
 Reopen PowerShell and restart the app. Each tailored resume or cover letter costs roughly 10 to 20 cents. Without a key you can still download the untailored base resume for each track.
 
-**Your facts stay yours.** Everything comes from `config/resume.json`, your master resume. Edit it when something changes; the tailoring never takes job titles, employers, dates, education or contact details from Claude, and any number, skill or certification it writes that isn't in your master resume is flagged in yellow before you download. Your phone number and email are never sent to Claude.
+**Your facts stay yours.** Everything comes from `resume.json` in your data folder, your master resume. Edit it when something changes; the tailoring never takes job titles, employers, dates, education or contact details from Claude, and any number, skill or certification it writes that isn't in your master resume is flagged in yellow before you download. Your phone number and email are never sent to Claude.
 
 If a request is declined by Claude's safety checks, it is retried automatically on a fallback model.
 
@@ -51,7 +66,7 @@ setx USAJOBS_API_KEY "your-key"
 setx USAJOBS_EMAIL "the-email-you-registered@example.com"
 ```
 
-The search keywords, location and radius are in `config/settings.toml`.
+The search keywords, location and radius are in `config/settings.toml`, which is shared by everyone using this copy of the app.
 
 ## Load the Seattle shortlist
 
@@ -64,11 +79,11 @@ Many employers host their careers page on Greenhouse or Lever. Find the board na
 - `boards.greenhouse.io/<name>` or `job-boards.greenhouse.io/<name>` goes in `greenhouse = ["<name>"]`
 - `jobs.lever.co/<name>` goes in `lever = ["<name>"]`
 
-Jobs outside your locations (set in `config/profile.json`) are left out. A wrong board name shows a warning and the rest of the search still runs.
+Jobs outside your locations (set in your `profile.json`) are left out. A wrong board name shows a warning and the rest of the search still runs.
 
 ## Tune the scoring
 
-`config/profile.json` holds your clearance, pay floor, locations, the title words for each track, and your skills. Each skill has the words that detect it in a posting, whether you **have** it, and a **weight** from 1 to 3. When you earn something, such as Security+ or AZ-104, set `"have": true` and press **Re-score saved jobs**.
+`profile.json` in your data folder holds your clearance, pay floor, locations, the title words for each track, and your skills. Each skill has the words that detect it in a posting, whether you **have** it, and a **weight** from 1 to 3. When you earn something, such as Security+ or AZ-104, set `"have": true` and press **Re-score saved jobs**.
 
 ## Tests
 
