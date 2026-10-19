@@ -12,11 +12,11 @@
   "tracks": {
     "IT / Systems Admin": {
       "headline": "Systems Administrator | Active TS/SCI",
-      "summary": "Navy technical leader with 7 years running mission-critical Linux and Windows systems, now completing Microsoft's Server and Cloud Administration program. Stood up three isolated network enclaves (270 virtual machines) across two bases, and automates administration with PowerShell and Python. Holds an active TS/SCI clearance."
+      "summary": "Navy technical leader with 8 years running mission-critical Linux and Windows systems, now completing Microsoft's Server and Cloud Administration program. Stood up three isolated network enclaves (270 virtual machines) across two bases, and automates administration with PowerShell and Python. Holds an active TS/SCI clearance."
     },
     "Data Analyst": {
       "headline": "Data Analyst | BA Data Analytics | Active TS/SCI",
-      "summary": "Data analyst with a BA in Data Analytics and 7 years turning operational data into decisions for Navy senior leadership. Built readiness and operations reporting, Python and Logic Apps dashboards, and post-deployment analyses from thousands of records. Works in SQL, KQL, Python, Power BI and Excel."
+      "summary": "Data analyst with a BA in Data Analytics and 8 years turning operational data into decisions for Navy senior leadership. Built readiness and operations reporting, Python and Logic Apps dashboards, and post-deployment analyses from thousands of records. Works in SQL, KQL, Python, Power BI and Excel."
     },
     "Project Manager": {
       "headline": "IT Project Manager | Active TS/SCI",
@@ -24,11 +24,11 @@
     },
     "Quality / Operations": {
       "headline": "Quality Assurance and Operations Supervisor | Active TS/SCI",
-      "summary": "Navy-certified Quality Assurance and Work Center Supervisor with 7 years leading technical teams. Wrote, reviewed and approved maintenance work packages against quality requirements, kept a Linux-based sonar system at 100% mission readiness, and administered qualification standards for 154 sailors."
+      "summary": "Navy-certified Quality Assurance and Work Center Supervisor with 8 years leading technical teams. Wrote, reviewed and approved maintenance work packages against quality requirements, kept a Linux-based sonar system at 100% mission readiness, and administered qualification standards for 154 sailors."
     },
     "Other": {
       "headline": "IT and Operations Professional | Active TS/SCI",
-      "summary": "Navy veteran with 7 years of technical leadership across systems administration, data analysis and operations planning, completing Microsoft's Server and Cloud Administration program. Holds a BA in Data Analytics and an active TS/SCI clearance."
+      "summary": "Navy veteran with 8 years of technical leadership across systems administration, data analysis and operations planning, completing Microsoft's Server and Cloud Administration program. Holds a BA in Data Analytics and an active TS/SCI clearance."
     }
   },
   "skills": {
