@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import os
 import re
+from datetime import date
 
 import pandas as pd
 import streamlit as st
 
+from job_hunter import cover_letter as letters
 from job_hunter import db, export
 from job_hunter import resume as resumes
 from job_hunter.collect import CollectResult, collect, save_jobs
@@ -42,19 +44,24 @@ def file_stem(job: dict) -> str:
     return re.sub(r"[^A-Za-z0-9_-]+", "_", f"{name}_{job['company']}_{job['title']}")[:90]
 
 
-def download_buttons(resume: dict, stem: str, prefix: str) -> None:
+def download_buttons(resume: dict, stem: str, prefix: str, what: str = "") -> None:
     c1, c2 = st.columns(2)
-    c1.download_button("Download Word", export.to_docx(resume), f"{stem}.docx",
+    c1.download_button(f"Download {what}Word", export.to_docx(resume), f"{stem}.docx",
                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"{prefix}-docx")
-    c2.download_button("Download PDF", export.to_pdf(resume), f"{stem}.pdf", "application/pdf", key=f"{prefix}-pdf")
+    c2.download_button(f"Download {what}PDF", export.to_pdf(resume), f"{stem}.pdf", "application/pdf", key=f"{prefix}-pdf")
 
 
-def resume_panel(job: dict) -> None:
+def has_api_key() -> bool:
+    return bool(os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN"))
+
+
+def resume_panel(job: dict) -> dict:
+    """Show the resume section and return the resume to send: tailored if there is one, else the base."""
     st.divider()
     st.subheader("Resume for this job")
     base = resumes.base_resume(master, job["track"])
     saved = db.latest_document(conn, job["key"], "resume")
-    has_key = bool(os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN"))
+    has_key = has_api_key()
 
     label = "Re-tailor my resume" if saved else "Tailor my resume to this job"
     if st.button(label, type="primary", disabled=not has_key, key=f"tailor-{job['key']}"):
@@ -74,7 +81,7 @@ def resume_panel(job: dict) -> None:
     if not saved:
         st.markdown(f"**Base resume for the {job['track']} track**")
         download_buttons(base, file_stem(job) + "_base", f"base-{job['key']}")
-        return
+        return base
 
     changes_tab, diff_tab, files_tab = st.tabs(["What changed", "Line by line", "Download"])
     with changes_tab:
@@ -96,6 +103,88 @@ def resume_panel(job: dict) -> None:
         st.markdown(f'<div style="font-size:0.85rem">{rows}</div>', unsafe_allow_html=True)
     with files_tab:
         download_buttons(saved["resume"], file_stem(job), f"tailored-{job['key']}")
+    return saved["resume"]
+
+
+def letter_buttons(letter: dict, stem: str, prefix: str, what: str = "") -> None:
+    c1, c2 = st.columns(2)
+    c1.download_button(f"Download {what}Word", export.letter_to_docx(letter), f"{stem}_cover_letter.docx",
+                       "application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"{prefix}-docx")
+    c2.download_button(f"Download {what}PDF", export.letter_to_pdf(letter), f"{stem}_cover_letter.pdf", "application/pdf",
+                       key=f"{prefix}-pdf")
+
+
+def cover_letter_panel(job: dict, resume: dict) -> dict | None:
+    """Show the cover letter section and return the latest letter for this job, if any."""
+    st.divider()
+    st.subheader("Cover letter for this job")
+    saved = db.latest_document(conn, job["key"], "cover_letter")
+    label = "Rewrite the cover letter" if saved else "Write a cover letter for this job"
+    if st.button(label, type="primary", disabled=not has_api_key(), key=f"letter-{job['key']}"):
+        with st.spinner("Claude is writing your cover letter..."):
+            try:
+                letter = letters.write(resume, job, model=settings.claude_model, effort=settings.claude_effort)
+            except Exception as exc:
+                st.error(f"Writing the cover letter failed: {exc}")
+            else:
+                saved = {"letter": letters.as_document(letter, master["contact"], job),
+                         "warnings": letters.check_facts(master, letter)}
+                db.save_document(conn, job["key"], "cover_letter", saved)
+    if not has_api_key():
+        st.caption("Set ANTHROPIC_API_KEY to turn on cover letters (see the README).")
+    if not saved:
+        return None
+    if saved["warnings"]:
+        st.warning("Double-check these before sending; they aren't in your master resume:\n\n"
+                   + "\n".join(f"- {w}" for w in saved["warnings"]))
+    with st.expander("Read the letter", expanded=False):
+        st.text(letters.as_text(saved["letter"]))
+    letter_buttons(saved["letter"], file_stem(job), f"letter-{job['key']}")
+    return saved["letter"]
+
+
+@st.dialog("Ready to apply?", width="large")
+def apply_dialog(job: dict, resume: dict, letter: dict | None) -> None:
+    tailored = db.latest_document(conn, job["key"], "resume") is not None
+    st.markdown(f"You're about to apply to **{job['title']}** at **{job['company']}**.")
+    resume_note = "tailored for this job" if tailored else f"your {job['track']} base resume (not tailored)"
+    letter_note = "written for this job" if letter else "none yet"
+    st.markdown(f"- Resume: {resume_note}\n- Cover letter: {letter_note}")
+    if not tailored or not letter:
+        st.caption("You can still apply, or cancel and use the buttons above first.")
+    st.markdown("**Download what you'll upload:**")
+    download_buttons(resume, file_stem(job), f"apply-resume-{job['key']}", "resume as ")
+    if letter:
+        letter_buttons(letter, file_stem(job), f"apply-letter-{job['key']}", "cover letter as ")
+
+    confirmed = st.session_state.get(f"applied-{job['key']}")
+    if not confirmed:
+        st.markdown("Pressing **Yes, apply** marks this job as Applied with today's date and gives you the "
+                    "link to the application page. Nothing is submitted for you; you send it on the employer's site.")
+        c1, c2 = st.columns(2)
+        if c1.button("Yes, apply", type="primary", key=f"confirm-{job['key']}"):
+            db.mark_applied(conn, job["key"], date.today().isoformat())
+            st.session_state[f"applied-{job['key']}"] = True
+            st.rerun(scope="fragment")
+        if c2.button("Cancel", key=f"cancel-{job['key']}"):
+            st.rerun()
+    else:
+        st.success("Marked as Applied. Open the application page, upload your files and submit.")
+        if job.get("apply_url"):
+            st.link_button("Open the application page", job["apply_url"], type="primary")
+        else:
+            st.caption("This job has no application link saved. Use the posting's own site.")
+        if st.button("Done", key=f"done-{job['key']}"):
+            st.session_state.pop(f"applied-{job['key']}", None)
+            st.rerun()
+
+
+def apply_panel(job: dict, resume: dict, letter: dict | None) -> None:
+    st.divider()
+    if job["status"] == "Applied" and job.get("applied_at"):
+        st.caption(f"You applied on {job['applied_at']}.")
+    if st.button("Apply to this job", type="primary", key=f"apply-{job['key']}"):
+        apply_dialog(job, resume, letter)
 
 
 st.title("Job Hunter")
@@ -125,7 +214,8 @@ with jobs_tab:
             [{
                 "Fit": j["score"], "Title": j["title"], "Company": j["company"], "Track": j["track"],
                 "Pay": money(j["salary_min"], j["salary_max"]), "Clearance": j["clearance"] or "None",
-                "Location": j["location"], "Status": j["status"], "Source": j["source"],
+                "Location": j["location"], "Status": j["status"], "Applied": j.get("applied_at") or "",
+                "Source": j["source"],
             } for j in shown]
         )
         st.caption(f"{len(shown)} of {len(jobs)} jobs. Tick rows to compare them or see details.")
@@ -156,7 +246,9 @@ with jobs_tab:
                     if st.form_submit_button("Save"):
                         db.set_status(conn, key, status, notes)
                         st.rerun()
-            resume_panel(job)
+            resume = resume_panel(job)
+            letter = cover_letter_panel(job, resume)
+            apply_panel(job, resume, letter)
 
 with compare_tab:
     keys = st.session_state.get("picked", [])

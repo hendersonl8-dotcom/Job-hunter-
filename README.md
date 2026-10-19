@@ -2,7 +2,7 @@
 
 Finds Seattle-area jobs, scores each one against your skills, and lets you compare them side by side.
 
-Pick any job and it tailors your resume to that posting with Claude, shows exactly what changed, and exports Word and PDF. Step 4 adds the Apply button with a tailored cover letter.
+Pick any job and it tailors your resume and writes a cover letter for that posting with Claude, then walks you through applying.
 
 ## What it does
 
@@ -12,6 +12,8 @@ Pick any job and it tailors your resume to that posting with Claude, shows exact
 - **Sorts jobs into tracks:** IT / Systems Admin, Data Analyst, Project Manager, Quality / Operations.
 - **Compares 2 to 4 jobs** side by side and tracks status (Saved, Applied, Interviewing and so on) with notes.
 - **Tailors your resume** to a job in one click: it reorders and rewords your own bullets toward the posting, lists what it changed and why, lists what the posting wants that you can't claim yet, and exports Word and PDF.
+- **Writes a cover letter** for the job from the same facts, exported as Word and PDF.
+- **Apply button:** asks you to confirm before anything happens, hands you the tailored resume and cover letter to download, marks the job Applied with today's date, and opens the employer's application page. You do the final submit on their site, so nothing is ever sent in your name without you seeing it.
 
 ## Run it on Windows
 
@@ -25,7 +27,7 @@ py -3 -m venv .venv
 
 It opens in your browser at http://localhost:8501. Jobs are saved in `data\jobs.db`, which is not uploaded to GitHub.
 
-## Turn on resume tailoring
+## Turn on resume tailoring and cover letters
 
 Tailoring uses Claude (`claude-opus-5-5` by default, set in `config/settings.toml`). Create an API key at https://console.anthropic.com/, then:
 
@@ -33,7 +35,7 @@ Tailoring uses Claude (`claude-opus-5-5` by default, set in `config/settings.tom
 setx ANTHROPIC_API_KEY "sk-ant-..."
 ```
 
-Reopen PowerShell and restart the app. Each tailored resume costs roughly 10 to 20 cents. Without a key you can still download the untailored base resume for each track.
+Reopen PowerShell and restart the app. Each tailored resume or cover letter costs roughly 10 to 20 cents. Without a key you can still download the untailored base resume for each track.
 
 **Your facts stay yours.** Everything comes from `config/resume.json`, your master resume. Edit it when something changes; the tailoring never takes job titles, employers, dates, education or contact details from Claude, and any number, skill or certification it writes that isn't in your master resume is flagged in yellow before you download. Your phone number and email are never sent to Claude.
 
