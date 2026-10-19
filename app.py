@@ -15,6 +15,8 @@ from job_hunter import db, export
 from job_hunter import resume as resumes
 from job_hunter.collect import CollectResult, collect, save_jobs
 from job_hunter.config import ROOT, load_settings
+from job_hunter.corrections import Corrections
+from job_hunter.evidence_panel import evidence_panel
 from job_hunter.scoring import Profile
 from job_hunter.sources import job_from_paste, jobs_from_csv
 
@@ -29,6 +31,7 @@ def connection(path: str):
 settings = load_settings()
 profile = Profile.load(settings.profile)
 conn = connection(str(settings.database))
+profile.corrections = Corrections(conn)
 master = resumes.load_master(settings.resume)
 
 
@@ -236,6 +239,7 @@ with jobs_tab:
                 st.markdown("\n".join(f"- {r}" for r in job["reasons"]))
                 st.markdown("**You have:** " + (", ".join(job["matched"]) or "none of the tracked skills"))
                 st.markdown("**It wants that you don't list yet:** " + (", ".join(job["missing"]) or "nothing"))
+                evidence_panel(conn, profile, job)
                 with st.expander("Full description"):
                     st.text(job["description"] or "No description saved.")
             with right:

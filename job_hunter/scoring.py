@@ -21,6 +21,17 @@ CLEARANCE_RANK = {"": 0, "Public Trust": 1, "Secret": 2, "Top Secret": 3, "TS/SC
 
 
 @dataclass
+class Evidence:
+    """The exact words in a posting that made a skill count."""
+
+    skill: str
+    have: bool
+    phrase: str
+    snippet: str  # the phrase with a little surrounding text
+    start: int  # where the phrase begins inside the snippet
+
+
+@dataclass
 class Fit:
     score: int
     track: str
@@ -61,11 +72,35 @@ class Profile:
                 return best
         return "Other"
 
+    corrections = None  # optional: anything with rejected(job_key) -> set of skill names
+
+    def evidence(self, job: Job, context: int = 60) -> list[Evidence]:
+        """For each skill the posting seems to ask for, the first phrase that matched."""
+        text = f"{job.title}\n{job.description}"
+        found = []
+        for name, (pattern, have, _weight) in self.skills.items():
+            m = pattern.search(text)
+            if not m:
+                continue
+            lo, hi = max(0, m.start() - context), min(len(text), m.end() + context)
+            if lo:  # don't cut a word in half
+                lo = text.rfind(" ", 0, lo) + 1
+            if hi < len(text):
+                end = text.find(" ", hi)
+                hi = len(text) if end == -1 else end
+            lead = "…" if lo else ""
+            snippet = lead + text[lo:hi].replace("\n", " ") + ("…" if hi < len(text) else "")
+            start = len(lead) + m.start() - lo
+            phrase = snippet[start:start + m.end() - m.start()]
+            found.append(Evidence(name, have, phrase, snippet, start))
+        return found
+
     def score(self, job: Job) -> Fit:
         text = f"{job.title}\n{job.description}"
+        rejected = self.corrections.rejected(job.key) if self.corrections else set()
         matched, missing, have_weight, want_weight = [], [], 0, 0
         for name, (pattern, have, weight) in self.skills.items():
-            if pattern.search(text):
+            if name not in rejected and pattern.search(text):
                 want_weight += weight
                 if have:
                     have_weight += weight
