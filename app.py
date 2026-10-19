@@ -11,7 +11,7 @@ import pandas as pd
 import streamlit as st
 
 from job_hunter import cover_letter as letters
-from job_hunter import db, export, find_screen, onboarding, onboarding_screen, outcomes_tab
+from job_hunter import db, export, find_screen, onboarding, onboarding_screen, outcomes_tab, resume_review_screen
 from job_hunter.backup import backup_database
 from job_hunter import resume as resumes
 from job_hunter.collect import CollectResult, collect, save_jobs
@@ -215,8 +215,8 @@ def apply_panel(job: dict, resume: dict, letter: dict | None) -> None:
 st.title("Job Hunter")
 st.caption(f"Scoring against your profile: {profile.clearance or 'no'} clearance, pay floor ${profile.min_salary:,.0f}.")
 
-find_tab, jobs_tab, compare_tab, add_tab, working_tab = st.tabs(
-    ["Find jobs", "Jobs", "Compare", "Add a job", "What's working"])
+find_tab, jobs_tab, compare_tab, add_tab, working_tab, review_tab = st.tabs(
+    ["Find jobs", "Jobs", "Compare", "Add a job", "What's working", "Resume review"])
 
 jobs = db.all_jobs(conn)
 
@@ -349,3 +349,6 @@ with find_tab:
 
 with working_tab:
     outcomes_tab.render(conn)
+
+with review_tab:
+    resume_review_screen.render(settings, master, profile, jobs)
