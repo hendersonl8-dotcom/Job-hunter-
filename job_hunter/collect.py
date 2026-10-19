@@ -46,7 +46,7 @@ def collect(settings: Settings, conn: sqlite3.Connection, profile: Profile, sess
             except Exception as exc:  # one failing search should not stop the rest
                 result.errors.append(f"USAJobs '{keyword}': {exc}")
     elif settings.usajobs_keywords:
-        result.errors.append("USAJobs skipped: set USAJOBS_API_KEY and USAJOBS_EMAIL to turn it on.")
+        result.errors.append("USAJobs skipped: add your USAJobs key and email under 'USAJobs key' to turn it on.")
 
     for name in settings.greenhouse_boards:
         try:

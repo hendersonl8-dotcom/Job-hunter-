@@ -59,14 +59,11 @@ If a request is declined by Claude's safety checks, it is retried automatically 
 ## Turn on USAJobs
 
 1. Request a free key at https://developer.usajobs.gov/apirequest/.
-2. Set it for your user account, then reopen PowerShell:
+2. Open **Find jobs**, expand **USAJobs key (one time)**, paste the key and your email, and press **Search now**. They are saved in your data folder (`search.json`), never in the project.
 
-```powershell
-setx USAJOBS_API_KEY "your-key"
-setx USAJOBS_EMAIL "the-email-you-registered@example.com"
-```
+(Setting `USAJOBS_API_KEY` and `USAJOBS_EMAIL` as environment variables still works and takes priority.)
 
-The search keywords, location and radius are in `config/settings.toml`, which is shared by everyone using this copy of the app.
+On **Find jobs** the search terms and location are pre-filled and editable, and you can tick Seattle-area Greenhouse and Lever company boards instead of editing `settings.toml`. LinkedIn and Glassdoor stay paste-only in **Add a job**.
 
 ## Load the Seattle shortlist
 
