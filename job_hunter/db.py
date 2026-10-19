@@ -46,7 +46,17 @@ CREATE TABLE IF NOT EXISTS documents (
     created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS documents_job ON documents (job_key, kind);
+CREATE TABLE IF NOT EXISTS outcomes (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    job_key     TEXT NOT NULL REFERENCES jobs (key),
+    kind        TEXT NOT NULL,  -- one of OUTCOMES
+    happened_on TEXT NOT NULL,  -- ISO date
+    note        TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS outcomes_job ON outcomes (job_key);
 """
+
+OUTCOMES = ["Reply", "Interview", "Offer", "Rejection"]
 
 _JOB_FIELDS = list(Job.__dataclass_fields__)
 
@@ -158,3 +168,38 @@ def mark_applied(conn: sqlite3.Connection, key: str, when: str) -> None:
         "UPDATE jobs SET status = 'Applied', applied_at = COALESCE(applied_at, ?) WHERE key = ?", (when, key)
     )
     conn.commit()
+
+
+def record_outcome(conn: sqlite3.Connection, key: str, kind: str, when: str, note: str = "") -> None:
+    """Log something that happened on an application. Does not change the job's status."""
+    if kind not in OUTCOMES:
+        raise ValueError(f"Unknown outcome {kind!r}")
+    conn.execute(
+        "INSERT INTO outcomes (job_key, kind, happened_on, note) VALUES (?, ?, ?, ?)", (key, kind, when, note)
+    )
+    conn.commit()
+
+
+def outcomes_for(conn: sqlite3.Connection, key: str) -> list[dict]:
+    rows = conn.execute("SELECT * FROM outcomes WHERE job_key = ? ORDER BY happened_on, id", (key,)).fetchall()
+    return [dict(row) for row in rows]
+
+
+def delete_outcome(conn: sqlite3.Connection, outcome_id: int) -> None:
+    conn.execute("DELETE FROM outcomes WHERE id = ?", (outcome_id,))
+    conn.commit()
+
+
+def application_rows(conn: sqlite3.Connection) -> list[dict]:
+    """Every job you applied to, with its track, resume version and the outcomes logged so far."""
+    rows = conn.execute(
+        """
+        SELECT j.key, j.title, j.company, j.track, j.status, j.applied_at,
+               EXISTS (SELECT 1 FROM documents d WHERE d.job_key = j.key AND d.kind = 'resume') AS tailored,
+               (SELECT group_concat(DISTINCT o.kind) FROM outcomes o WHERE o.job_key = j.key) AS logged
+        FROM jobs j
+        WHERE j.applied_at IS NOT NULL OR j.status IN ('Applied', 'Interviewing', 'Offer', 'Rejected')
+        ORDER BY j.applied_at DESC, j.title
+        """
+    ).fetchall()
+    return [dict(row) | {"logged": set((row["logged"] or "").split(",")) - {""}} for row in rows]

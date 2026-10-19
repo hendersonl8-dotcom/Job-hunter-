@@ -11,7 +11,7 @@ import pandas as pd
 import streamlit as st
 
 from job_hunter import cover_letter as letters
-from job_hunter import db, export
+from job_hunter import db, export, outcomes_tab
 from job_hunter import resume as resumes
 from job_hunter.collect import CollectResult, collect, save_jobs
 from job_hunter.config import ROOT, load_settings
@@ -191,7 +191,8 @@ def apply_panel(job: dict, resume: dict, letter: dict | None) -> None:
 st.title("Job Hunter")
 st.caption(f"Scoring against your profile: {profile.clearance or 'no'} clearance, pay floor ${profile.min_salary:,.0f}.")
 
-jobs_tab, compare_tab, add_tab, find_tab = st.tabs(["Jobs", "Compare", "Add a job", "Find new jobs"])
+jobs_tab, compare_tab, add_tab, find_tab, working_tab = st.tabs(
+    ["Jobs", "Compare", "Add a job", "Find new jobs", "What's working"])
 
 jobs = db.all_jobs(conn)
 
@@ -333,3 +334,6 @@ with find_tab:
             st.warning(error)
     if c2.button("Re-score saved jobs"):
         st.success(f"Re-scored {db.rescore(conn, profile)} jobs with your current profile.")
+
+with working_tab:
+    outcomes_tab.render(conn)
