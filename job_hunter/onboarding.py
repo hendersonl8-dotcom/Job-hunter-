@@ -16,6 +16,7 @@ from pathlib import Path
 import anthropic
 from pydantic import BaseModel, Field
 
+from job_hunter import userdata
 from job_hunter.resume import FALLBACK_BETA, MODEL
 
 MAX_CHARS = 60000
@@ -225,9 +226,5 @@ def load_json(path: str | Path) -> dict:
 
 
 def save_json(path: str | Path, data: dict) -> None:
-    """The one place onboarding writes config. Writes to a temp file first so a crash cannot leave half a file."""
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    tmp.replace(path)
+    """The one place onboarding writes config: into the user's data folder (see userdata.py)."""
+    userdata.write_json(path, data)
