@@ -11,7 +11,8 @@ import pandas as pd
 import streamlit as st
 
 from job_hunter import cover_letter as letters
-from job_hunter import db, export, find_screen, onboarding, onboarding_screen, outcomes_tab, resume_review_screen
+from job_hunter import (db, export, find_screen, onboarding, onboarding_screen, outcomes_tab, pipeline,
+                        resume_review_screen, theme, tour)
 from job_hunter.backup import backup_database
 from job_hunter import resume as resumes
 from job_hunter.collect import CollectResult, collect, save_jobs
@@ -22,6 +23,7 @@ from job_hunter.scoring import Profile
 from job_hunter.sources import job_from_paste, jobs_from_csv
 
 st.set_page_config(page_title="Job Hunter", page_icon="🧭", layout="wide")
+st.logo(theme.logo_uri())
 
 
 @st.cache_resource
@@ -212,13 +214,16 @@ def apply_panel(job: dict, resume: dict, letter: dict | None) -> None:
         apply_dialog(job, resume, letter)
 
 
-st.title("Job Hunter")
-st.caption(f"Scoring against your profile: {profile.clearance or 'no'} clearance, pay floor ${profile.min_salary:,.0f}.")
+theme.header(f"Scoring against your profile: {profile.clearance or 'no'} clearance, pay floor ${profile.min_salary:,.0f}.")
+tour.maybe_show()
 
-find_tab, jobs_tab, compare_tab, add_tab, working_tab, review_tab = st.tabs(
-    ["Find jobs", "Jobs", "Compare", "Add a job", "What's working", "Resume review"])
+home_tab, find_tab, jobs_tab, compare_tab, add_tab, working_tab, review_tab = st.tabs(
+    ["Home", "Find jobs", "Jobs", "Compare", "Add a job", "What's working", "Resume review"])
 
 jobs = db.all_jobs(conn)
+
+with home_tab:
+    pipeline.render(conn, jobs, profile.min_salary)
 
 with jobs_tab:
     if not jobs:
