@@ -1,0 +1,8 @@
+[
+  {"id": "a1b2c3d4", "text": "IT Project Coordinator", "hostedUrl": "https://jobs.lever.co/fabrikam/a1b2c3d4",
+   "applyUrl": "https://jobs.lever.co/fabrikam/a1b2c3d4/apply", "createdAt": 1760000000000,
+   "categories": {"location": "Bellevue, WA", "team": "IT", "commitment": "Full-time"},
+   "descriptionPlain": "Coordinate infrastructure projects with stakeholders using Jira.",
+   "lists": [{"text": "Requirements", "content": "<li>PMP or CAPM preferred</li><li>Active Secret clearance</li>"}],
+   "additionalPlain": "", "salaryRange": {"min": 40, "max": 52, "currency": "USD", "interval": "per-hour-wage"}}
+]

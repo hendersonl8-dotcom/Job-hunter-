@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+data/
+# Your own resumes and generated letters stay off GitHub
+resumes/
+output/
+.env

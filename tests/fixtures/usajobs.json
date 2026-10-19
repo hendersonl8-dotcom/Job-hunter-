@@ -1,0 +1,13 @@
+{"SearchResult": {"SearchResultCount": 1, "SearchResultItems": [
+  {"MatchedObjectId": "812345600", "MatchedObjectDescriptor": {
+    "PositionID": "NW-12345-26", "PositionTitle": "IT Specialist (SYSADMIN)",
+    "PositionURI": "https://www.usajobs.gov/job/812345600",
+    "ApplyURI": ["https://www.usajobs.gov/job/812345600/apply"],
+    "PositionLocationDisplay": "Silverdale, Washington",
+    "OrganizationName": "Naval Sea Systems Command", "DepartmentName": "Department of the Navy",
+    "QualificationSummary": "Experience administering Linux and Windows Server systems. Security+ certification required within 6 months.",
+    "PositionRemuneration": [{"MinimumRange": "84000", "MaximumRange": "109000", "RateIntervalCode": "PA"}],
+    "PublicationStartDate": "2026-10-01T00:00:00.0000",
+    "UserArea": {"Details": {"JobSummary": "Maintain classified networks.", "MajorDuties": ["Patch and harden servers", "Apply STIGs"], "SecurityClearance": "Top Secret/SCI"}}
+  }}
+]}}
