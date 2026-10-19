@@ -10,6 +10,7 @@ OutputBaseFilename=JobHunter-Setup
 Compression=lzma2
 SolidCompression=yes
 PrivilegesRequired=lowest
+SetupIconFile=..\assets\icon.ico
 UninstallDisplayIcon={app}\JobHunter.exe
 
 [Files]

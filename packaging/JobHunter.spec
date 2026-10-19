@@ -1,11 +1,11 @@
 # PyInstaller spec. Build with packaging/build.ps1 (run from the repo root).
 import os
-from PyInstaller.utils.hooks import collect_all
+from PyInstaller.utils.hooks import collect_all, collect_submodules
 
 ROOT = os.path.dirname(SPECPATH)  # spec paths resolve against the spec folder
 
-datas = [(os.path.join(ROOT, n), n if os.path.isdir(os.path.join(ROOT, n)) else ".") for n in ("app.py", "config", "shortlists", ".streamlit")]
-binaries, hiddenimports = [], ["job_hunter"]
+datas = [(os.path.join(ROOT, n), n if os.path.isdir(os.path.join(ROOT, n)) else ".") for n in ("app.py", "config", "shortlists", ".streamlit", "assets")]
+binaries, hiddenimports = [], collect_submodules("job_hunter")  # app.py is data, so list its imports here
 for pkg in ("streamlit", "webview", "anthropic", "docx", "fpdf", "pypdf", "pandas"):
     try:
         d, b, h = collect_all(pkg)
@@ -19,5 +19,5 @@ a = Analysis([os.path.join(ROOT, "desktop.py")], pathex=[ROOT], binaries=binarie
              hiddenimports=hiddenimports, noarchive=False)
 pyz = PYZ(a.pure)
 exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name="JobHunter", console=False,
-          icon=os.path.join(SPECPATH, "icon.ico") if os.path.exists(os.path.join(SPECPATH, "icon.ico")) else None)
+          icon=os.path.join(ROOT, "assets", "icon.ico"))
 coll = COLLECT(exe, a.binaries, a.datas, name="JobHunter")

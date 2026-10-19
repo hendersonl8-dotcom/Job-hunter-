@@ -2,7 +2,7 @@ name: Windows installer
 
 on:
   pull_request:
-    paths: [ "desktop.py", "packaging/**", "requirements.txt", ".github/workflows/windows-installer.yml" ]
+    paths: [ "desktop.py", "app.py", "job_hunter/**", "assets/**", ".streamlit/**", "packaging/**", "requirements.txt", ".github/workflows/windows-installer.yml" ]
   workflow_dispatch:
 
 jobs:
@@ -18,6 +18,11 @@ jobs:
       - name: Build installer
         shell: pwsh
         run: powershell -ExecutionPolicy Bypass -File packaging\build.ps1
+      - name: Packaged app runs the real app script
+        shell: pwsh
+        run: |
+          $p = Start-Process dist\JobHunter\JobHunter.exe -ArgumentList "--check" -PassThru -Wait
+          if ($p.ExitCode -ne 0) { throw "app.py failed to load in the packaged app (exit $($p.ExitCode))" }
       - name: Smoke test the packaged app starts its server
         shell: pwsh
         run: |

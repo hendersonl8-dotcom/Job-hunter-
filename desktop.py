@@ -17,6 +17,7 @@ import urllib.request
 from pathlib import Path
 
 SERVE_FLAG = "--serve"
+CHECK_FLAG = "--check"  # run the real app script once headlessly; exit code 0 = it loads
 TITLE = "Job Hunter"
 
 
@@ -62,7 +63,20 @@ def wait_until_up(url: str, process: subprocess.Popen, timeout: float = 60) -> b
     return False
 
 
+def check() -> int:
+    import tempfile
+
+    os.environ["JOB_HUNTER_HOME"] = tempfile.mkdtemp()
+    os.chdir(app_root())
+    from streamlit.testing.v1 import AppTest
+
+    at = AppTest.from_file(str(app_root() / "app.py"), default_timeout=60).run()
+    return 1 if at.exception else 0
+
+
 def main() -> int:
+    if CHECK_FLAG in sys.argv:
+        return check()
     if SERVE_FLAG in sys.argv:
         serve(int(sys.argv[sys.argv.index(SERVE_FLAG) + 1]))
         return 0
