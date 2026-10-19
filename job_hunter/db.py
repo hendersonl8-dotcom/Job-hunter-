@@ -7,6 +7,7 @@ import sqlite3
 from dataclasses import asdict
 from pathlib import Path
 
+from .backup import backup_database
 from .models import Job
 from .scoring import Fit
 
@@ -46,15 +47,38 @@ CREATE TABLE IF NOT EXISTS documents (
     created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS documents_job ON documents (job_key, kind);
+CREATE TABLE IF NOT EXISTS sends (  -- the resume and letter versions that went out with an application
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    job_key     TEXT NOT NULL REFERENCES jobs (key),
+    resume_id   INTEGER REFERENCES documents (id),  -- NULL: the untailored base resume went out
+    letter_id   INTEGER REFERENCES documents (id),
+    sent_at     TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS sends_job ON sends (job_key);
 """
 
 _JOB_FIELDS = list(Job.__dataclass_fields__)
+
+
+def _backup_before_migration(path: Path) -> None:
+    """Copy an existing database aside if opening it would change its tables."""
+    if str(path) == ":memory:" or not path.exists():
+        return
+    peek = sqlite3.connect(path)
+    try:
+        tables = {r[0] for r in peek.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
+        columns = {r[1] for r in peek.execute("PRAGMA table_info(jobs)")}
+    finally:
+        peek.close()
+    if tables and ("sends" not in tables or ("jobs" in tables and "applied_at" not in columns)):
+        backup_database(path, "pre-migration")
 
 
 def connect(path: str | Path) -> sqlite3.Connection:
     path = Path(path)
     if str(path) != ":memory:":
         path.parent.mkdir(parents=True, exist_ok=True)
+    _backup_before_migration(path)
     conn = sqlite3.connect(path, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.executescript(SCHEMA)
@@ -157,4 +181,33 @@ def mark_applied(conn: sqlite3.Connection, key: str, when: str) -> None:
     conn.execute(
         "UPDATE jobs SET status = 'Applied', applied_at = COALESCE(applied_at, ?) WHERE key = ?", (when, key)
     )
+    conn.commit()
+
+
+# --- Version history: every generated resume and letter, and which ones were sent -------------------
+
+def document_history(conn: sqlite3.Connection, job_key: str) -> list[dict]:
+    """Every saved resume and cover letter for a job, newest first, each marked with when it was sent."""
+    sent = {}
+    for row in conn.execute("SELECT resume_id, letter_id, sent_at FROM sends WHERE job_key = ? ORDER BY id", (job_key,)):
+        for doc_id in (row["resume_id"], row["letter_id"]):
+            if doc_id is not None:
+                sent.setdefault(doc_id, row["sent_at"])
+    rows = conn.execute(
+        "SELECT id, kind, content, created_at FROM documents WHERE job_key = ? ORDER BY id DESC", (job_key,)
+    ).fetchall()
+    return [{"id": r["id"], "kind": r["kind"], "created_at": r["created_at"], "sent_at": sent.get(r["id"]),
+             "content": json.loads(r["content"])} for r in rows]
+
+
+def record_send(conn: sqlite3.Connection, job_key: str, when: str) -> None:
+    """Remember which resume and letter versions are the latest, as the ones sent with this application."""
+    ids = {}
+    for kind in ("resume", "cover_letter"):
+        row = conn.execute(
+            "SELECT id FROM documents WHERE job_key = ? AND kind = ? ORDER BY id DESC LIMIT 1", (job_key, kind)
+        ).fetchone()
+        ids[kind] = row["id"] if row else None
+    conn.execute("INSERT INTO sends (job_key, resume_id, letter_id, sent_at) VALUES (?, ?, ?, ?)",
+                 (job_key, ids["resume"], ids["cover_letter"], when))
     conn.commit()
