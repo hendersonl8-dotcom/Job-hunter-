@@ -12,6 +12,7 @@ import streamlit as st
 
 from job_hunter import cover_letter as letters
 from job_hunter import db, export
+from job_hunter.backup import backup_database
 from job_hunter import resume as resumes
 from job_hunter.collect import CollectResult, collect, save_jobs
 from job_hunter.config import ROOT, load_settings
@@ -129,7 +130,7 @@ def cover_letter_panel(job: dict, resume: dict) -> dict | None:
                 st.error(f"Writing the cover letter failed: {exc}")
             else:
                 saved = {"letter": letters.as_document(letter, master["contact"], job),
-                         "warnings": letters.check_facts(master, letter)}
+                         "warnings": letters.check_facts(master, letter, profile)}
                 db.save_document(conn, job["key"], "cover_letter", saved)
     if not has_api_key():
         st.caption("Set ANTHROPIC_API_KEY to turn on cover letters (see the README).")
@@ -165,6 +166,7 @@ def apply_dialog(job: dict, resume: dict, letter: dict | None) -> None:
         c1, c2 = st.columns(2)
         if c1.button("Yes, apply", type="primary", key=f"confirm-{job['key']}"):
             db.mark_applied(conn, job["key"], date.today().isoformat())
+            db.record_send(conn, job["key"], date.today().isoformat())
             st.session_state[f"applied-{job['key']}"] = True
             st.rerun(scope="fragment")
         if c2.button("Cancel", key=f"cancel-{job['key']}"):
@@ -178,6 +180,22 @@ def apply_dialog(job: dict, resume: dict, letter: dict | None) -> None:
         if st.button("Done", key=f"done-{job['key']}"):
             st.session_state.pop(f"applied-{job['key']}", None)
             st.rerun()
+
+
+def history_panel(job: dict) -> None:
+    history = db.document_history(conn, job["key"])
+    if not history:
+        return
+    with st.expander(f"Version history ({len(history)})"):
+        for doc in history:
+            kind = "Resume" if doc["kind"] == "resume" else "Cover letter"
+            sent = f" - sent {doc['sent_at']}" if doc["sent_at"] else ""
+            st.markdown(f"**{kind}**, made {doc['created_at']}{sent}")
+            content = doc["content"]
+            if doc["kind"] == "cover_letter":
+                st.text(letters.as_text(content["letter"]))
+            else:
+                st.text("\n".join(resumes.resume_lines(content["resume"])))
 
 
 def apply_panel(job: dict, resume: dict, letter: dict | None) -> None:
@@ -250,6 +268,7 @@ with jobs_tab:
             resume = resume_panel(job)
             letter = cover_letter_panel(job, resume)
             apply_panel(job, resume, letter)
+            history_panel(job)
 
 with compare_tab:
     keys = st.session_state.get("picked", [])
@@ -322,7 +341,7 @@ with find_tab:
     )
     if not (settings.usajobs_api_key and settings.usajobs_email):
         st.warning("USAJobs is off until you set USAJOBS_API_KEY and USAJOBS_EMAIL. See the README.")
-    c1, c2 = st.columns(2)
+    c1, c2, c3 = st.columns(3)
     if c1.button("Search now", type="primary"):
         with st.spinner("Searching job sources..."):
             result = collect(settings, conn, profile)
@@ -333,3 +352,6 @@ with find_tab:
             st.warning(error)
     if c2.button("Re-score saved jobs"):
         st.success(f"Re-scored {db.rescore(conn, profile)} jobs with your current profile.")
+    if c3.button("Back up the database"):
+        copy = backup_database(settings.database)
+        st.success(f"Saved a copy to {copy}") if copy else st.info("Nothing to back up yet.")

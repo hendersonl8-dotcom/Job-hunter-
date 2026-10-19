@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from datetime import date
 
 import anthropic
@@ -56,14 +57,29 @@ def write(resume: dict, job: dict, client: anthropic.Anthropic | None = None, mo
     return response.parsed_output
 
 
-def check_facts(master: dict, letter: CoverLetter) -> list[str]:
-    source_numbers = {_norm_number(n) for n in _NUMBER.findall(json.dumps(master, ensure_ascii=False))}
+# Certifications named in free text, e.g. "AZ-104", "Security+", "PMP".
+_CERT = re.compile(r"\b[A-Z]{1,3}-\d{2,4}\b|\b(?:Security|Network|A|Cloud|Linux)\+|\b(?:CISSP|CISM|CISA|CEH|PMP|CAPM|CCNA|CCNP|ITIL|MCSA|MCSE)\b")
+
+
+def check_facts(master: dict, letter: CoverLetter, profile=None) -> list[str]:
+    """Warnings for numbers, certifications and not-yet-earned skills in the letter that the master resume lacks."""
+    source = json.dumps(master, ensure_ascii=False)
+    source_numbers = {_norm_number(n) for n in _NUMBER.findall(source)}
+    source_lower = source.lower()
     warnings = []
     for paragraph in letter.paragraphs:
         for number in _NUMBER.findall(paragraph):
             if _norm_number(number) not in source_numbers:
                 warnings.append(f"Check the number {number!r} in: {paragraph[:120]}...")
-    return warnings
+        for cert in dict.fromkeys(_CERT.findall(paragraph)):
+            if cert.lower() not in source_lower:
+                warnings.append(f"Check the certification {cert!r}: it isn't in your master resume")
+    if profile is not None:
+        text = " ".join(letter.paragraphs)
+        for name, (pattern, have, _weight) in profile.skills.items():
+            if not have and pattern.search(text):
+                warnings.append(f"Check the skill {name!r}: your profile says you don't have it yet")
+    return list(dict.fromkeys(warnings))
 
 
 def as_document(letter: CoverLetter, contact: dict, job: dict, today: date | None = None) -> dict:
