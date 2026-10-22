@@ -14,6 +14,7 @@ from . import userdata
 
 ROOT = userdata.ROOT
 SEARCH_FILE = "search.json"
+REMOTE_MODES = ("onsite", "include", "only")
 
 
 def load_search_prefs() -> dict:
@@ -41,6 +42,8 @@ class Settings:
     usajobs_radius: int = 60
     greenhouse_boards: list[str] = field(default_factory=list)
     lever_boards: list[str] = field(default_factory=list)
+    areas: list[str] = field(default_factory=list)  # preset names (sources/areas.py) or place names; empty = usajobs_location only
+    remote_mode: str = "include"  # "onsite" (no remote), "include" (on-site plus remote), "only" (remote only)
     usajobs_api_key: str = ""
     usajobs_email: str = ""
 
@@ -63,6 +66,8 @@ def load_settings(path: str | Path | None = None) -> Settings:
         usajobs_radius=int(usajobs.get("radius_miles", 60)),
         greenhouse_boards=_union(boards.get("greenhouse", []), _saved_boards(saved, "greenhouse")),
         lever_boards=_union(boards.get("lever", []), _saved_boards(saved, "lever")),
+        areas=list(saved.get("areas") or []),
+        remote_mode=saved.get("remote_mode") if saved.get("remote_mode") in REMOTE_MODES else "include",
         usajobs_api_key=os.environ.get("USAJOBS_API_KEY") or saved.get("usajobs_api_key", ""),
         usajobs_email=os.environ.get("USAJOBS_EMAIL") or saved.get("usajobs_email", ""),
     )

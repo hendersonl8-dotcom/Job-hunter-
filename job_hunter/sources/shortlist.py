@@ -12,6 +12,7 @@ import io
 
 from ..models import Job
 from ..text import detect_clearance
+from .workmode import detect_work_mode
 
 
 def _number(value: str) -> float | None:
@@ -50,5 +51,6 @@ def jobs_from_csv(text: str) -> list[Job]:
             salary_max=_number(row.get("pay_max", "")),
             clearance=detect_clearance(row.get("clearance", "")),
             posted_at=row.get("date_posted", ""),
+            work_mode=detect_work_mode(row.get("location", ""), title, "\n\n".join(parts)),
         ))
     return jobs

@@ -10,6 +10,7 @@ import requests
 
 from ..models import Job
 from ..text import HOURS_PER_YEAR, detect_clearance
+from .workmode import detect_work_mode
 
 API = "https://data.usajobs.gov/api/search"
 
@@ -39,13 +40,15 @@ def parse_usajobs(payload: dict) -> list[Job]:
         clearance = details.get("SecurityClearance", "")
         clearance = detect_clearance(clearance) or ("" if clearance in ("", "Not Required", "Not Applicable") else clearance)
         apply_urls = d.get("ApplyURI") or []
+        remote = str(details.get("RemoteIndicator", "")).lower() == "true"
+        location = d.get("PositionLocationDisplay", "")
         jobs.append(
             Job(
                 source="usajobs",
                 external_id=str(d.get("PositionID") or item.get("MatchedObjectId")),
                 title=d.get("PositionTitle", ""),
                 company=" / ".join(x for x in [d.get("DepartmentName", ""), d.get("OrganizationName", "")] if x),
-                location=d.get("PositionLocationDisplay", ""),
+                location=location,
                 url=d.get("PositionURI", ""),
                 apply_url=apply_urls[0] if apply_urls else d.get("PositionURI", ""),
                 description=description,
@@ -53,6 +56,7 @@ def parse_usajobs(payload: dict) -> list[Job]:
                 salary_max=_annual(pay.get("MaximumRange"), interval),
                 clearance=clearance or detect_clearance(description),
                 posted_at=d.get("PublicationStartDate", ""),
+                work_mode=detect_work_mode(location, d.get("PositionTitle", ""), description, "remote" if remote else ""),
             )
         )
     return jobs
@@ -64,13 +68,19 @@ def fetch_usajobs(
     email: str,
     location: str = "Seattle, Washington",
     radius_miles: int = 60,
+    remote_only: bool = False,
     session: requests.Session | None = None,
     timeout: int = 30,
 ) -> list[Job]:
     http = session or requests.Session()
+    params = {"Keyword": keyword, "ResultsPerPage": 100}
+    if remote_only:
+        params["RemoteIndicator"] = "True"
+    else:
+        params.update(LocationName=location, Radius=radius_miles)
     response = http.get(
         API,
-        params={"Keyword": keyword, "LocationName": location, "Radius": radius_miles, "ResultsPerPage": 100},
+        params=params,
         headers={"Host": "data.usajobs.gov", "User-Agent": email, "Authorization-Key": api_key},
         timeout=timeout,
     )
