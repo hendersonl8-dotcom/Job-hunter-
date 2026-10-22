@@ -10,6 +10,7 @@ from urllib.parse import urlparse
 
 from ..models import Job
 from ..text import detect_clearance, parse_salary
+from .workmode import detect_work_mode
 
 _SITES = {"linkedin.com": "linkedin", "glassdoor.com": "glassdoor", "indeed.com": "indeed"}
 
@@ -39,4 +40,5 @@ def job_from_paste(title: str, company: str, description: str, url: str = "", lo
         salary_min=low,
         salary_max=high,
         clearance=detect_clearance(description),
+        work_mode=detect_work_mode(location, title, description),
     )

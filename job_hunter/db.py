@@ -36,7 +36,8 @@ CREATE TABLE IF NOT EXISTS jobs (
     reasons      TEXT,
     status       TEXT NOT NULL DEFAULT 'New',
     notes        TEXT NOT NULL DEFAULT '',
-    applied_at   TEXT
+    applied_at   TEXT,
+    work_mode    TEXT
 );
 CREATE INDEX IF NOT EXISTS jobs_dupe ON jobs (lower(title), lower(company));
 CREATE TABLE IF NOT EXISTS documents (
@@ -95,6 +96,9 @@ def connect(path: str | Path) -> sqlite3.Connection:
     columns = {row["name"] for row in conn.execute("PRAGMA table_info(jobs)")}
     if "applied_at" not in columns:  # databases created before the Apply button
         conn.execute("ALTER TABLE jobs ADD COLUMN applied_at TEXT")
+        conn.commit()
+    if "work_mode" not in columns:  # databases created before remote/hybrid detection
+        conn.execute("ALTER TABLE jobs ADD COLUMN work_mode TEXT")
         conn.commit()
     return conn
 

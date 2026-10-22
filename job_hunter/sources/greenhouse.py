@@ -6,6 +6,7 @@ import requests
 
 from ..models import Job
 from ..text import detect_clearance, html_to_text, parse_salary
+from .workmode import detect_work_mode
 
 API = "https://boards-api.greenhouse.io/v1/boards/{token}/jobs"
 
@@ -16,13 +17,15 @@ def parse_greenhouse(payload: dict, token: str) -> list[Job]:
         description = html_to_text(item.get("content", ""))
         low, high = parse_salary(description)
         url = item.get("absolute_url", "")
+        title = item.get("title", "").strip()
+        location = (item.get("location") or {}).get("name", "")
         jobs.append(
             Job(
                 source="greenhouse",
                 external_id=str(item["id"]),
-                title=item.get("title", "").strip(),
+                title=title,
                 company=item.get("company_name") or token,
-                location=(item.get("location") or {}).get("name", ""),
+                location=location,
                 url=url,
                 apply_url=url,
                 description=description,
@@ -30,6 +33,7 @@ def parse_greenhouse(payload: dict, token: str) -> list[Job]:
                 salary_max=high,
                 clearance=detect_clearance(description),
                 posted_at=item.get("updated_at", ""),
+                work_mode=detect_work_mode(location, title, description),
             )
         )
     return jobs

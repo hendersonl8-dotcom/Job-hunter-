@@ -20,6 +20,7 @@ class Job:
     salary_max: float | None = None
     clearance: str = ""  # "", "Public Trust", "Secret", "Top Secret", "TS/SCI"
     posted_at: str = ""
+    work_mode: str = ""  # "remote", "hybrid", "onsite" or "" when the posting does not say
     fetched_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat(timespec="seconds"))
 
     @property

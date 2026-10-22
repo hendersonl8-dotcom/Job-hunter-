@@ -4,11 +4,13 @@ LinkedIn and Glassdoor are paste-only on purpose: their terms forbid scraping an
 automated applying, and accounts that use bots get restricted.
 """
 
+from .areas import AREAS, Area
 from .greenhouse import fetch_greenhouse
 from .lever import fetch_lever
 from .manual import job_from_paste
 from .seattle_boards import SEATTLE_BOARDS
 from .shortlist import jobs_from_csv
 from .usajobs import fetch_usajobs
+from .workmode import detect_work_mode
 
-__all__ = ["SEATTLE_BOARDS", "fetch_greenhouse", "fetch_lever", "fetch_usajobs", "job_from_paste", "jobs_from_csv"]
+__all__ = ["AREAS", "Area", "SEATTLE_BOARDS", "detect_work_mode", "fetch_greenhouse", "fetch_lever", "fetch_usajobs", "job_from_paste", "jobs_from_csv"]

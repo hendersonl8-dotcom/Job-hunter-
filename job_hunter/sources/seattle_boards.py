@@ -20,6 +20,8 @@ SEATTLE_BOARDS: list[tuple[str, str, str]] = [
     ("lever", "highspot", "Highspot"),
     ("lever", "tripadvisor", "Tripadvisor"),
     ("lever", "zulily", "Zulily"),
+    ("greenhouse", "zillowgroup", "Zillow"),
+    ("greenhouse", "docusign", "DocuSign"),
 ]
 
 

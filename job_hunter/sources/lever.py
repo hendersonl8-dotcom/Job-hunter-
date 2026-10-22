@@ -8,6 +8,7 @@ import requests
 
 from ..models import Job
 from ..text import HOURS_PER_YEAR, detect_clearance, html_to_text, parse_salary
+from .workmode import detect_work_mode
 
 API = "https://api.lever.co/v0/postings/{company}"
 
@@ -34,19 +35,22 @@ def parse_lever(payload: list, company: str) -> list[Job]:
         low, high = _salary(item, description)
         created = item.get("createdAt")
         categories = item.get("categories") or {}
+        title = item.get("text", "").strip()
+        location = categories.get("location", "") or item.get("workplaceType", "")
         jobs.append(
             Job(
                 source="lever",
                 external_id=item["id"],
-                title=item.get("text", "").strip(),
+                title=title,
                 company=company,
-                location=categories.get("location", "") or item.get("workplaceType", ""),
+                location=location,
                 url=item.get("hostedUrl", ""),
                 apply_url=item.get("applyUrl") or item.get("hostedUrl", ""),
                 description=description,
                 salary_min=low,
                 salary_max=high,
                 clearance=detect_clearance(description),
+                work_mode=detect_work_mode(location, title, description, item.get("workplaceType", "")),
                 posted_at=datetime.fromtimestamp(created / 1000, timezone.utc).isoformat() if created else "",
             )
         )
