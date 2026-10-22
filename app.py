@@ -11,7 +11,7 @@ import pandas as pd
 import streamlit as st
 
 from job_hunter import cover_letter as letters
-from job_hunter import (db, export, find_screen, onboarding, onboarding_screen, outcomes_tab, pipeline,
+from job_hunter import (db, export, find_screen, onboarding, onboarding_screen, outcomes_tab, pipeline, preferences_screen,
                         resume_review_screen, role_suggestions_screen, theme, tour)
 from job_hunter.backup import backup_database
 from job_hunter import resume as resumes
@@ -217,8 +217,9 @@ def apply_panel(job: dict, resume: dict, letter: dict | None) -> None:
 theme.header(f"Scoring against your profile: {profile.clearance or 'no'} clearance, pay floor ${profile.min_salary:,.0f}.")
 tour.maybe_show()
 
-home_tab, find_tab, jobs_tab, compare_tab, add_tab, working_tab, review_tab, roles_tab = st.tabs(
-    ["Home", "Find jobs", "Jobs", "Compare", "Add a job", "What's working", "Resume review", "Roles I'd consider"])
+home_tab, find_tab, jobs_tab, compare_tab, add_tab, working_tab, review_tab, roles_tab, prefs_tab = st.tabs(
+    ["Home", "Find jobs", "Jobs", "Compare", "Add a job", "What's working", "Resume review", "Roles I'd consider",
+     "Preferences"])
 
 jobs = db.all_jobs(conn)
 
@@ -360,3 +361,6 @@ with review_tab:
 
 with roles_tab:
     role_suggestions_screen.render(settings, master, profile, jobs)
+
+with prefs_tab:
+    preferences_screen.render(profile)

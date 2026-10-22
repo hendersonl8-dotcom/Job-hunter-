@@ -4,6 +4,8 @@ Skills 70 points: of the skills the posting asks for, the weighted share you hav
 Clearance 10: you hold TS/SCI, so a posting that requires a clearance is an edge.
 Pay 10: meets your floor (10), unknown (5), below it (0).
 Location 10: in your area or remote (10), otherwise (0).
+Those are the default weights. Preferences (preferences.py) can change them and add remote,
+employer type and seniority; the score is always rescaled to 0-100.
 """
 
 from __future__ import annotations
@@ -14,6 +16,7 @@ from dataclasses import dataclass, field
 from functools import cached_property
 from pathlib import Path
 
+from . import preferences as prefs_mod
 from .models import Job
 from .text import matches_location
 
@@ -35,6 +38,7 @@ class Evidence:
 class Fit:
     score: int
     track: str
+    hidden: str = ""  # why a never-show / must-have rule rules the job out
     matched: list[str] = field(default_factory=list)
     missing: list[str] = field(default_factory=list)
     reasons: list[str] = field(default_factory=list)
@@ -47,6 +51,7 @@ class Profile:
         self.min_salary = float(data.get("min_salary") or 0)
         self.locations = data.get("locations", [])
         self.allow_remote = data.get("allow_remote", True)
+        self.prefs = prefs_mod.merged(data.get("preferences"))
 
     @classmethod
     def load(cls, path: str | Path) -> "Profile":
@@ -95,6 +100,10 @@ class Profile:
             found.append(Evidence(name, have, phrase, snippet, start))
         return found
 
+    def hidden_reason(self, job: Job) -> str:
+        """Small hook for other screens: why the user's rules rule this job out, or ""."""
+        return prefs_mod.hidden_reason(self.prefs, job)
+
     def score(self, job: Job) -> Fit:
         text = f"{job.title}\n{job.description}"
         rejected = self.corrections.rejected(job.key) if self.corrections else set()
@@ -107,38 +116,57 @@ class Profile:
                     matched.append(name)
                 else:
                     missing.append(name)
-        reasons = []
-        skill_points = round(70 * have_weight / want_weight) if want_weight else 35
-        reasons.append(f"Skills {skill_points}/70: you have {len(matched)} of {len(matched) + len(missing)} it mentions")
+        w = self.prefs["weights"]
+        reasons, earned = [], 0.0
 
+        def add(name: str, fraction: float, why: str) -> None:
+            nonlocal earned
+            if w[name] <= 0:
+                return
+            points = fraction * w[name]
+            earned += points
+            reasons.append(f"{prefs_mod.LABELS[name]} {points:g}/{w[name]:g}: {why}")
+
+        skill_fraction = have_weight / want_weight if want_weight else 0.5
+        add("skills", skill_fraction, f"you have {len(matched)} of {len(matched) + len(missing)} it mentions")
+
+        mode = self.prefs["clearance_mode"]
         required = CLEARANCE_RANK.get(job.clearance, 2 if job.clearance else 0)
-        if not required:
-            clearance_points = 5
-            reasons.append("Clearance 5/10: none required")
-        elif required <= CLEARANCE_RANK.get(self.clearance, 0):
-            clearance_points = 10
-            reasons.append(f"Clearance 10/10: wants {job.clearance}, you hold {self.clearance}")
+        if mode == "ignore":
+            pass
+        elif not required:
+            add("clearance", 0.5, "none required")
+        elif mode == "hold" and required <= CLEARANCE_RANK.get(self.clearance, 0):
+            add("clearance", 1.0, f"wants {job.clearance}, you hold {self.clearance}")
+        elif mode == "grow":
+            add("clearance", 0.5, f"wants {job.clearance}; you're ready to grow one")
         else:
-            clearance_points = 0
-            reasons.append(f"Clearance 0/10: wants {job.clearance}")
+            add("clearance", 0.0, f"wants {job.clearance}")
 
         if job.salary_max is None:
-            pay_points = 5
-            reasons.append("Pay 5/10: not listed")
+            add("pay", 0.5, "not listed")
         elif job.salary_max >= self.min_salary:
-            pay_points = 10
-            reasons.append(f"Pay 10/10: up to ${job.salary_max:,.0f}")
+            add("pay", 1.0, f"up to ${job.salary_max:,.0f}")
         else:
-            pay_points = 0
-            reasons.append(f"Pay 0/10: tops out at ${job.salary_max:,.0f}, under your ${self.min_salary:,.0f} floor")
+            add("pay", 0.0, f"tops out at ${job.salary_max:,.0f}, under your ${self.min_salary:,.0f} floor")
 
         in_area = matches_location(job.location, self.locations, self.allow_remote) if job.location else True
-        location_points = 10 if in_area else 0
-        reasons.append(f"Location {location_points}/10: {job.location or 'not listed'}")
+        add("location", 1.0 if in_area else 0.0, job.location or "not listed")
+        add("remote", *prefs_mod.remote_fraction(self.prefs, job))
+        add("employer", *prefs_mod.employer_fraction(self.prefs, job))
+        add("seniority", *prefs_mod.seniority_fraction(self.prefs, job))
+
+        total = sum(w[k] for k in w if not (k == "clearance" and mode == "ignore"))
+        score = round(100 * earned / total) if total else 0
+        hidden = self.hidden_reason(job)
+        if hidden:
+            score = 0
+            reasons.append(f"Ruled out ({hidden})")
 
         return Fit(
-            score=skill_points + clearance_points + pay_points + location_points,
+            score=score,
             track=self.track_for(job),
+            hidden=hidden,
             matched=matched,
             missing=missing,
             reasons=reasons,
