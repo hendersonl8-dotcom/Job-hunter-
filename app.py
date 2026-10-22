@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import csv
-import os
 import re
 from datetime import date
 
@@ -11,8 +10,8 @@ import pandas as pd
 import streamlit as st
 
 from job_hunter import cover_letter as letters
-from job_hunter import (db, export, find_screen, onboarding, onboarding_screen, outcomes_tab, pipeline, preferences_screen,
-                        resume_review_screen, role_suggestions_screen, theme, tour)
+from job_hunter import (db, export, find_screen, keys, onboarding, onboarding_screen, outcomes_tab, pipeline, preferences_screen,
+                        resume_review_screen, role_suggestions_screen, sidebar, theme, tour)
 from job_hunter.backup import backup_database
 from job_hunter import resume as resumes
 from job_hunter.collect import CollectResult, collect, save_jobs
@@ -31,14 +30,18 @@ def connection(path: str):
     return db.connect(path)
 
 
+keys.load_into_env()
 settings = load_settings()
 if onboarding.needs_onboarding(settings.profile, settings.resume):
+    if st.session_state.get("new-profile-saved-to"):
+        st.info(f"Your previous profile is saved in {st.session_state['new-profile-saved-to']}.")
     onboarding_screen.render(settings)
     st.stop()
 profile = Profile.load(settings.profile)
 conn = connection(str(settings.database))
 profile.corrections = Corrections(conn)
 master = resumes.load_master(settings.resume)
+sidebar.render(conn)
 
 
 def money(low, high) -> str:
@@ -61,8 +64,7 @@ def download_buttons(resume: dict, stem: str, prefix: str, what: str = "") -> No
     c2.download_button(f"Download {what}PDF", export.to_pdf(resume), f"{stem}.pdf", "application/pdf", key=f"{prefix}-pdf")
 
 
-def has_api_key() -> bool:
-    return bool(os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN"))
+has_api_key = keys.has_claude_key
 
 
 def resume_panel(job: dict) -> dict:
@@ -85,7 +87,7 @@ def resume_panel(job: dict) -> dict:
                 saved = {"resume": tailored, "changes": raw.changes, "gaps": raw.gaps, "warnings": warnings}
                 db.save_document(conn, job["key"], "resume", saved)
     if not has_key:
-        st.caption("Set ANTHROPIC_API_KEY to turn on tailoring (see the README)."
+        st.caption("Add your Claude key in the sidebar to turn on tailoring."
                    + ("" if saved else f" Meanwhile you can download your {job['track']} base resume below."))
 
     if not saved:
@@ -141,7 +143,7 @@ def cover_letter_panel(job: dict, resume: dict) -> dict | None:
                          "warnings": letters.check_facts(master, letter, profile)}
                 db.save_document(conn, job["key"], "cover_letter", saved)
     if not has_api_key():
-        st.caption("Set ANTHROPIC_API_KEY to turn on cover letters (see the README).")
+        st.caption("Add your Claude key in the sidebar to turn on cover letters.")
     if not saved:
         return None
     if saved["warnings"]:
@@ -330,8 +332,8 @@ with add_tab:
                            else f"Updated **{job.title}**, which was already saved: fit {fit.score}/100.")
 
     st.divider()
-    st.markdown("**Import a job list** saved as CSV, such as the Seattle shortlists from your project.")
-    for path in sorted((ROOT / "shortlists").glob("*.csv")):
+    st.markdown("**Import a job list** saved as CSV." + ("" if profile.data.get("generated") else " The Seattle shortlists from your project are below."))
+    for path in ([] if profile.data.get("generated") else sorted((ROOT / "shortlists").glob("*.csv"))):
         if st.button(f"Load {path.stem}", key=f"load-{path.name}"):
             result = CollectResult()
             save_jobs(conn, profile, jobs_from_csv(path.read_text(encoding="utf-8")), result, filter_location=False)

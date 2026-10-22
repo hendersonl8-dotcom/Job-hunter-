@@ -70,6 +70,7 @@ def test_never_show_and_must_have_zero_the_score():
 
 def test_preferences_saved_in_profile(tmp_path, monkeypatch):
     monkeypatch.setenv("JOB_HUNTER_HOME", str(tmp_path))
+    userdata.save_profile({"clearance": "TS/SCI"})
     save_preferences(prefs_mod.merged({"remote": "hybrid", "must_have": ["python"]}))
     saved = userdata.load_profile()["preferences"]
     assert saved["remote"] == "hybrid" and saved["must_have"] == ["python"]

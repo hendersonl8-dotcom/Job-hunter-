@@ -13,7 +13,7 @@ def render(settings, master: dict, profile, jobs: list[dict]) -> None:
     st.write("Reads your master resume and suggests neighboring job titles it genuinely supports. Tick the "
              "ones you want: they become new tracks and search terms. A run costs roughly 5 cents.")
     if not has_api_key():
-        st.warning("Suggestions need a Claude API key. Set ANTHROPIC_API_KEY (see the README), then reload.")
+        st.warning("Suggestions need a Claude API key. Add your Claude key in the sidebar.")
 
     if st.button("Suggest roles", type="primary", disabled=not has_api_key()):
         try:

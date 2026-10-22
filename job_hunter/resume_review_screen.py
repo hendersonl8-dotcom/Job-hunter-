@@ -13,7 +13,7 @@ def render(settings, master: dict, profile, jobs: list[dict]) -> None:
              "and claims that need a number. Suggestions never add a skill, certification or number you "
              "do not have; keywords are offered as \"if true, add\". A review costs roughly 5-10 cents.")
     if not has_api_key():
-        st.warning("A review needs a Claude API key. Set ANTHROPIC_API_KEY (see the README), then reload.")
+        st.warning("A review needs a Claude API key. Add your Claude key in the sidebar.")
 
     if st.button("Review my resume", type="primary", disabled=not has_api_key()):
         try:
