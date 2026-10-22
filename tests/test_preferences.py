@@ -75,3 +75,10 @@ def test_preferences_saved_in_profile(tmp_path, monkeypatch):
     assert saved["remote"] == "hybrid" and saved["must_have"] == ["python"]
     assert saved["weights"]["skills"] == 70 and "skills" in saved["weights"]
     assert "clearance" in userdata.load_profile()  # the rest of the profile is untouched
+
+
+def test_remote_reads_work_mode_field_when_present():
+    p = profile(weights={"remote": 20}, remote="remote")
+    remote, onsite = job(location="Seattle, WA"), job(location="Seattle, WA")
+    remote.work_mode, onsite.work_mode = "remote", "on-site"
+    assert p.score(remote).score > p.score(onsite).score

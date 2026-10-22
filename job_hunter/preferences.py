@@ -76,8 +76,8 @@ def seniority(job: Job) -> str:
 
 
 def work_mode(job: Job) -> str:
-    """remote, hybrid, onsite or "" (unknown). Uses the field the sources set, else the posting text."""
-    mode = str(getattr(job, "remote", "") or "").lower()
+    """remote, hybrid, onsite or "" (unknown). Uses the job's work_mode field, else the posting text."""
+    mode = str(getattr(job, "work_mode", "") or "").lower()
     if mode in ("remote", "hybrid", "onsite", "on-site"):
         return "onsite" if mode == "on-site" else mode
     text = f"{job.location} {job.title}".lower()
