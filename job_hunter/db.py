@@ -213,6 +213,16 @@ def outcomes_for(conn: sqlite3.Connection, key: str) -> list[dict]:
     return [dict(row) for row in rows]
 
 
+def update_outcome(conn: sqlite3.Connection, outcome_id: int, kind: str, when: str, note: str = "") -> None:
+    """Correct a logged outcome: what happened, when, and the note."""
+    if kind not in OUTCOMES:
+        raise ValueError(f"Unknown outcome {kind!r}")
+    conn.execute(
+        "UPDATE outcomes SET kind = ?, happened_on = ?, note = ? WHERE id = ?", (kind, when, note, outcome_id)
+    )
+    conn.commit()
+
+
 def delete_outcome(conn: sqlite3.Connection, outcome_id: int) -> None:
     conn.execute("DELETE FROM outcomes WHERE id = ?", (outcome_id,))
     conn.commit()
