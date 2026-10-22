@@ -76,3 +76,36 @@ def test_rates_by_track_and_resume_version():
     by_version = {r["Group"]: r for r in outcomes_tab.summarize(apps, "version")}
     assert by_version["Tailored"]["Applied"] == 2 and by_version["Tailored"]["Interview rate"] == "100%"
     assert by_version["Base resume"]["Applied"] == 2 and by_version["Base resume"]["Interview rate"] == "0%"
+
+
+def test_edit_outcome():
+    conn = db.connect(":memory:")
+    key = add_job(conn, 1, "IT Admin")
+    db.record_outcome(conn, key, "Reply", "2026-11-01")
+    (row,) = db.outcomes_for(conn, key)
+    db.update_outcome(conn, row["id"], "Interview", "2026-11-03", "phone screen")
+    (row,) = db.outcomes_for(conn, key)
+    assert (row["kind"], row["happened_on"], row["note"]) == ("Interview", "2026-11-03", "phone screen")
+    with pytest.raises(ValueError):
+        db.update_outcome(conn, row["id"], "Ghosted", "2026-11-03")
+    assert db.application_rows(conn)[0]["logged"] == {"Interview"}
+
+
+def test_company_research_is_shared_per_company_and_editable():
+    from job_hunter import company_research as cr
+
+    conn = db.connect(":memory:")
+    add_job(conn, 1, "IT Admin")
+    assert cr.get(conn, "Co 1")["about"] == "" and cr.researched(conn) == set()
+    cr.save(conn, "Co 1", {"about": " Defense contractor ", "bogus": "x"})
+    assert cr.get(conn, "  co 1 ")["about"] == "Defense contractor"
+    assert cr.researched(conn) == {"co 1"}
+    cr.save(conn, "CO 1", {"about": "Defense contractor", "questions": "Team size?"})
+    notes = cr.get(conn, "Co 1")
+    assert notes["questions"] == "Team size?" and notes["name"] == "Co 1"
+    cr.save(conn, "Brand New Inc", {"news": "Won a Navy contract"})
+    assert cr.companies(conn) == ["Brand New Inc", "Co 1"]
+    cr.delete(conn, "co 1")
+    assert cr.researched(conn) == {"brand new inc"}
+    with pytest.raises(ValueError):
+        cr.save(conn, "  ", {})
