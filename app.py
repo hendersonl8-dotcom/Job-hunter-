@@ -10,7 +10,7 @@ import pandas as pd
 import streamlit as st
 
 from job_hunter import cover_letter as letters
-from job_hunter import (db, export, find_screen, keys, onboarding, onboarding_screen, outcomes_tab, pipeline, preferences_screen,
+from job_hunter import (db, export, find_screen, job_filters, keys, onboarding, onboarding_screen, outcomes_tab, pipeline, preferences_screen,
                         resume_review_screen, role_suggestions_screen, sidebar, theme, tour)
 from job_hunter.backup import backup_database
 from job_hunter import preferences as prefs_mod
@@ -217,7 +217,7 @@ def apply_panel(job: dict, resume: dict, letter: dict | None) -> None:
         apply_dialog(job, resume, letter)
 
 
-theme.header(f"Scoring against your profile: {profile.clearance or 'no'} clearance, pay floor ${profile.min_salary:,.0f}.")
+theme.header("Find, compare and apply to jobs that fit you.")
 tour.maybe_show()
 
 home_tab, find_tab, jobs_tab, compare_tab, add_tab, working_tab, review_tab, roles_tab, prefs_tab = st.tabs(
@@ -233,12 +233,17 @@ with jobs_tab:
     if not jobs:
         st.info("No jobs yet. Use **Find jobs** or paste one in **Add a job**.")
     else:
+        view = st.segmented_control(
+            "Show", list(job_filters.VIEWS), default="Open",
+            format_func=lambda v: job_filters.view_label(v, jobs), key="jobs-view",
+        ) or "Open"
         tracks = sorted({j["track"] for j in jobs})
         c1, c2, c3, c4 = st.columns(4)
         track_filter = c1.multiselect("Track", tracks, default=tracks)
-        status_filter = c2.multiselect("Status", db.STATUSES, default=[s for s in db.STATUSES if s not in ("Skipped", "Rejected")])
-        min_score = c3.slider("Minimum fit", 0, 100, 0)
-        hide_low_pay = c4.checkbox("Hide jobs under my pay floor", value=True)
+        min_score = c2.slider("Minimum fit", 0, 100, 0)
+        min_pay = c3.number_input("Minimum salary ($/yr)", min_value=0, step=5000, value=int(profile.min_salary),
+                                  help="Hides jobs whose top pay is under this. Set to 0 to show every job.")
+        hide_unlisted = c4.checkbox("Hide jobs with no pay listed", value=False)
         levels = [*prefs_mod.SENIORITY_LEVELS, "not stated"]
         level_filter = st.multiselect(
             "Level", levels, default=levels,
@@ -248,9 +253,9 @@ with jobs_tab:
 
         shown = [
             j for j in jobs
-            if j["track"] in track_filter and j["status"] in status_filter and j["score"] >= min_score
+            if j["track"] in track_filter and j["status"] in job_filters.VIEWS[view] and j["score"] >= min_score
             and level[j["key"]] in level_filter
-            and not (hide_low_pay and j["salary_max"] is not None and j["salary_max"] < profile.min_salary)
+            and job_filters.meets_min_salary(j, min_pay, hide_unlisted)
         ]
         table = pd.DataFrame(
             [{
@@ -260,6 +265,8 @@ with jobs_tab:
                 "Source": j["source"],
             } for j in shown]
         )
+        if view == "Saved" and not shown:
+            st.info("No saved jobs match these filters. Open a job below and press **Save this job** to keep it here.")
         st.caption(f"{len(shown)} of {len(jobs)} jobs. Tick rows to compare them or see details.")
         picked = st.dataframe(
             table, hide_index=True, width="stretch", on_select="rerun", selection_mode="multi-row",
@@ -283,6 +290,10 @@ with jobs_tab:
             with right:
                 if job["url"]:
                     st.link_button("Open posting", job["url"])
+                if job["status"] == "New" and st.button("Save this job", key=f"save-{key}"):
+                    db.set_status(conn, key, "Saved", job["notes"])
+                    st.toast("Saved. Find it under **Show: Saved** in the Jobs tab.")
+                    st.rerun()
                 with st.form(f"status-{key}"):
                     status = st.selectbox("Status", db.STATUSES, index=db.STATUSES.index(job["status"]))
                     notes = st.text_area("Notes", job["notes"])
