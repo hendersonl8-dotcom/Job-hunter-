@@ -87,14 +87,14 @@ def migrate_legacy(folder: Path, root: Path = ROOT) -> list[str]:
 
     Originals are left where they are, nothing is deleted, and nothing already in the
     user folder is overwritten. A database is backed up (backups\\) before it is copied.
-    The project's config/profile.json is the starter scoring profile for everyone. The
-    config/resume.json master resume is only carried over for someone who already has a
-    database there, so a fresh install never starts with another person's resume.
+    The project's config/profile.json and config/resume.json are the original owner's. They are
+    only carried over for someone who already has a database there, so a fresh install starts
+    empty and the welcome screen builds a profile from that person's own resume.
     """
     done: list[str] = []
     old_db = root / "data" / DATABASE_FILE
     for name, source in (
-        (PROFILE_FILE, root / "config" / PROFILE_FILE),
+        (PROFILE_FILE, root / "config" / PROFILE_FILE if old_db.exists() else None),
         (RESUME_FILE, root / "config" / RESUME_FILE if old_db.exists() else None),
     ):
         if source and source.exists() and not (folder / name).exists():

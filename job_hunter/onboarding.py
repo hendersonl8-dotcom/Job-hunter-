@@ -37,6 +37,7 @@ class Track(BaseModel):
     title_words: list[str] = Field(description="Plain job-title words that mark this family in postings")
     headline: str
     summary: str = Field(description="2-3 sentences using only facts in the resume")
+    search_terms: list[str] = Field(default_factory=list, description="2-3 job-board search phrases for this family, e.g. 'registered nurse'")
 
 
 class Skill(BaseModel):
@@ -77,14 +78,14 @@ class ExtractedResume(BaseModel):
     locations: list[str] = Field(default_factory=list, description="Cities or regions the person lives in or is clearly targeting")
 
 
-SYSTEM = """You read a job seeker's resume and extract it into structured facts.
+SYSTEM = """You read a job seeker's resume, in any field (nursing, accounting, trades, teaching, IT, sales, and so on), and extract it into structured facts.
 
 Rules:
 - Use only what the resume text says. Never invent employers, titles, dates, tools, certifications, numbers or results.
 - Copy contact details, titles, employers, dates, education and certifications as written.
 - Keep each role's bullets close to the original wording; you may fix obvious extraction breaks (a bullet split across lines).
 - Skills: list tools, technologies and methods the resume names. Do not add skills it does not name.
-- Tracks: one to four job families the resume honestly supports. Headline and summary use only facts from the resume.
+- Tracks: one to four job families the resume honestly supports, named the way employers title them in this person's field. Headline and summary use only facts from the resume. title_words are plain words found in real job titles for the family; search_terms are phrases to type into a job board.
 - Leave a field empty when the resume does not say."""
 
 
@@ -200,21 +201,50 @@ def build_resume(facts: ExtractedResume) -> dict:
     }
 
 
+def _word(text: str) -> str:
+    """The text as a case-insensitive pattern that only matches whole words (so 'RN' is not 'learn')."""
+    text = text.strip()
+    left = r"\b" if re.match(r"\w", text) else ""
+    right = r"\b" if re.search(r"\w$", text) else ""
+    return left + re.escape(text) + right
+
+
 def build_profile(facts: ExtractedResume, min_salary: float, locations: list[str],
                   allow_remote: bool = True) -> dict:
-    """The config/profile.json shape."""
+    """The config/profile.json shape. Built only from the person's own resume: nothing is borrowed from anyone else's."""
     skills = {
-        s.name: {"aliases": [re.escape(a) for a in [s.name, *s.aliases] if a.strip()], "have": True, "weight": 2}
-        for s in facts.skills
+        s.name: {"aliases": list(dict.fromkeys(_word(a) for a in [s.name, *s.aliases] if a.strip())), "have": True, "weight": 2}
+        for s in facts.skills if s.name.strip()
     }
-    return {
+    terms = [t for track in facts.tracks for t in [track.name, *track.search_terms] if t.strip()]
+    profile = {
+        "generated": True,
         "clearance": facts.contact.clearance,
         "min_salary": int(min_salary),
         "locations": locations,
         "allow_remote": allow_remote,
-        "tracks": {t.name: [re.escape(w) for w in t.title_words if w.strip()] for t in facts.tracks if t.title_words},
+        "tracks": {t.name: [_word(w) for w in t.title_words if w.strip()] for t in facts.tracks if t.title_words},
+        "search_terms": list(dict.fromkeys(terms)),
         "skills": skills,
     }
+    if not facts.contact.clearance:
+        profile["preferences"] = {"clearance_mode": "ignore"}  # a clearance the person doesn't hold shouldn't pull scores around
+    return profile
+
+
+def search_prefs(profile: dict) -> dict:
+    """What the Find jobs screen starts from: the person's own search terms, places and remote setting."""
+    from job_hunter.sources import AREAS
+
+    places = profile.get("locations", [])
+
+    def in_area(place: str, area) -> bool:
+        return place.lower() == area.name.lower() or any(t.lower() in place.lower() for t in area.terms)
+
+    areas = [name for name, area in AREAS.items() if any(in_area(p, area) for p in places)]
+    custom = [p for p in places if not any(in_area(p, a) for a in AREAS.values())]
+    mode = "include" if profile.get("allow_remote", True) else "onsite"
+    return {"keywords": profile.get("search_terms", []), "areas": list(dict.fromkeys(areas + custom)), "remote_mode": mode}
 
 
 def needs_onboarding(profile_path: str | Path, resume_path: str | Path) -> bool:

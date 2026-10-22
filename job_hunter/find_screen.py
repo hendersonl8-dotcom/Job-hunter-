@@ -18,6 +18,15 @@ REMOTE_CHOICES = {"On-site only": "onsite", "On-site and remote": "include", "Re
 DEFAULT_KEYWORDS = ["information technology specialist", "system administrator", "data analyst", "project manager"]
 
 
+def keywords_default(settings: Settings, prefs: dict, profile: Profile) -> list[str]:
+    """Saved terms first. A profile built from someone's own resume then uses its own terms, never the starter IT list."""
+    if prefs.get("keywords"):
+        return prefs["keywords"]
+    if profile.data.get("generated"):
+        return profile.data.get("search_terms", [])
+    return settings.usajobs_keywords or DEFAULT_KEYWORDS
+
+
 def split_lines(text: str) -> list[str]:
     return [line.strip() for line in text.replace(",", "\n").splitlines() if line.strip()]
 
@@ -28,7 +37,7 @@ def render(settings: Settings, conn, profile: Profile) -> None:
     st.caption("Searches USAJobs and the company boards you tick in every area you pick, keeps the jobs there (and remote ones if you want them) and scores them against your profile.")
 
     keywords = st.text_area("Search terms (one per line)", height=120, key="find-keywords",
-                            value="\n".join(settings.usajobs_keywords or DEFAULT_KEYWORDS))
+                            value="\n".join(keywords_default(settings, prefs, profile)))
     saved_areas = [a for a in prefs.get("areas", []) if a in AREAS] or ["Seattle"]
     areas = st.multiselect("Search areas", list(AREAS), default=saved_areas, key="find-areas",
                            help="Each area is searched on USAJobs and its company boards. Pick as many as you like.")

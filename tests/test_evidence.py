@@ -37,9 +37,9 @@ def test_snippet_trims_long_text_at_word_edges():
 
 def test_generic_words_do_not_count():
     job = job_from_paste("Sales Rep", "Acme", "Grow our sales pipeline. Manage the customer database.")
-    from job_hunter.config import load_settings
+    from job_hunter.config import ROOT
 
-    real = Profile.load(load_settings().profile)
+    real = Profile.load(ROOT / "config" / "profile.json")
     names = {e.skill for e in real.evidence(job)}
     assert "SQL" not in names and "Git / CI" not in names
 

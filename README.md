@@ -48,17 +48,28 @@ Your profile, master resume, job database, backups and every generated resume an
 
 ## Turn on resume tailoring and cover letters
 
-Tailoring uses Claude (`claude-opus-5-5` by default, set in `config/settings.toml`). Create an API key at https://console.anthropic.com/, then:
+Tailoring uses Claude (`claude-opus-5-5` by default, set in `config/settings.toml`). Create an API key at https://console.anthropic.com/ and paste it into the app: the welcome screen asks for it, and the **Claude key** section in the sidebar changes it later. The key is checked, then saved in your data folder (`keys.json`) on this computer only.
 
-```powershell
-setx ANTHROPIC_API_KEY "sk-ant-..."
-```
-
-Reopen PowerShell and restart the app. Each tailored resume or cover letter costs roughly 10 to 20 cents. Without a key you can still download the untailored base resume for each track.
+(Setting `ANTHROPIC_API_KEY` as an environment variable still works and takes priority.) Each tailored resume or cover letter costs roughly 10 to 20 cents. Without a key you can still download the untailored base resume for each track.
 
 **Your facts stay yours.** Everything comes from `resume.json` in your data folder, your master resume. Edit it when something changes; the tailoring never takes job titles, employers, dates, education or contact details from Claude, and any number, skill or certification it writes that isn't in your master resume is flagged in yellow before you download. Your phone number and email are never sent to Claude.
 
 If a request is declined by Claude's safety checks, it is retried automatically on a fallback model.
+
+## For someone else
+
+Job Hunter isn't only for IT: it builds everything from the resume you give it, in any field.
+
+1. Install it (the Windows installer, or from source) and open it. A new user's data folder starts empty, so the welcome screen appears.
+2. **Connect Claude:** paste your own Claude API key (the screen walks you through getting one). Resume reading, tailoring and letters are billed to your account, roughly 10 to 20 cents per tailored resume.
+3. **Upload your resume** (PDF or Word). Claude reads it and proposes your job families, search terms and skills, using only what the resume says. Anything it can't find in your text is dropped or flagged.
+4. **Review and edit** the job families, skills, places to look, lowest pay and remote setting. Untick any job family you don't want.
+5. **Pick other roles** (optional): *Suggest roles* offers neighboring titles your resume supports; tick the ones you want.
+6. **USAJobs key** (optional): add it now or later in **Find jobs** if you want federal jobs.
+
+Press **Save and start**. Scoring, search terms and places all come from your resume, with no clearance in your scoring unless your resume lists one.
+
+**Start a new profile** (sidebar) is for a different person or resume on the same computer. It copies the current profile, master resume, search settings and saved jobs to `profiles\<date-time>` in your data folder, clears them, and shows the welcome screen again. Your Claude key stays. To go back, close the app and copy the files from that folder into your data folder.
 
 ## Turn on USAJobs
 

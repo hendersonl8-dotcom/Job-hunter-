@@ -38,13 +38,13 @@ def test_migration_never_overwrites_and_runs_once(tmp_path):
     assert userdata.migrate_legacy(home, root) == []
 
 
-def test_fresh_install_gets_starter_profile_but_not_someone_elses_resume(tmp_path):
+def test_fresh_install_starts_empty_so_onboarding_runs(tmp_path):
     root, home = tmp_path / "repo", tmp_path / "home"
     (root / "config").mkdir(parents=True)
     (root / "config" / "profile.json").write_text("{}")
     (root / "config" / "resume.json").write_text('{"contact": {"name": "Someone"}}')
     home.mkdir()
-    assert userdata.migrate_legacy(home, root) == ["profile.json"]
+    assert userdata.migrate_legacy(home, root) == []
 
 
 def test_save_resume_keeps_previous_version(tmp_path):
