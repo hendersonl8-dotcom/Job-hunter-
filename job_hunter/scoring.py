@@ -6,6 +6,11 @@ Pay 10: meets your floor (10), unknown (5), below it (0).
 Location 10: in your area or remote (10), otherwise (0).
 Those are the default weights. Preferences (preferences.py) can change them and add remote,
 employer type and seniority; the score is always rescaled to 0-100.
+
+Skills that only a few general items back up (say leadership and QA) earn partial credit, not
+all 70. After weighting, a posting that is clearly out of reach is scaled down whatever the
+weights: a director/VP/chief title (unless you picked "executive" in Preferences), or one that
+asks for several more years of experience than your profile's years_experience.
 """
 
 from __future__ import annotations
@@ -21,6 +26,9 @@ from .models import Job
 from .text import matches_location
 
 CLEARANCE_RANK = {"": 0, "Public Trust": 1, "Secret": 2, "Top Secret": 3, "TS/SCI": 4}
+YEARS = re.compile(r"\b(\d{1,2})\s*\+?\s*(?:or more\s+)?years?\b", re.I)
+SKILL_PRIOR = 4  # weight of "unknown" skills mixed in, so a 2-skill match isn't treated as proof
+EXECUTIVE_FACTOR = 0.6
 
 
 @dataclass
@@ -51,6 +59,7 @@ class Profile:
         self.min_salary = float(data.get("min_salary") or 0)
         self.locations = data.get("locations", [])
         self.allow_remote = data.get("allow_remote", True)
+        self.years = data.get("years_experience")
         self.prefs = prefs_mod.merged(data.get("preferences"))
 
     @classmethod
@@ -104,6 +113,20 @@ class Profile:
         """Small hook for other screens: why the user's rules rule this job out, or ""."""
         return prefs_mod.hidden_reason(self.prefs, job)
 
+    def reach(self, job: Job) -> tuple[float, list[str]]:
+        """How much to scale the score down for a posting well above your level, and why."""
+        factor, why = 1.0, []
+        if prefs_mod.seniority(job) == "executive" and "executive" not in self.prefs["seniority"]:
+            factor *= EXECUTIVE_FACTOR
+            why.append("executive-level title (director, VP, chief)")
+        # the first figure is usually the headline bar; later ones are often "or 12 years without a degree"
+        asked = next((int(n) for n in YEARS.findall(job.description) if int(n) <= 40), 0)
+        if self.years is not None and asked - float(self.years) >= 3:
+            gap = asked - float(self.years)
+            factor *= 0.6 if gap >= 6 else 0.8
+            why.append(f"asks for {asked}+ years, you have {self.years:g}")
+        return factor, why
+
     def score(self, job: Job) -> Fit:
         text = f"{job.title}\n{job.description}"
         rejected = self.corrections.rejected(job.key) if self.corrections else set()
@@ -125,9 +148,9 @@ class Profile:
                 return
             points = fraction * w[name]
             earned += points
-            reasons.append(f"{prefs_mod.LABELS[name]} {points:g}/{w[name]:g}: {why}")
+            reasons.append(f"{prefs_mod.LABELS[name]} {round(points, 1):g}/{w[name]:g}: {why}")
 
-        skill_fraction = have_weight / want_weight if want_weight else 0.5
+        skill_fraction = (have_weight + SKILL_PRIOR * 0.5) / (want_weight + SKILL_PRIOR)
         add("skills", skill_fraction, f"you have {len(matched)} of {len(matched) + len(missing)} it mentions")
 
         mode = self.prefs["clearance_mode"]
@@ -157,7 +180,10 @@ class Profile:
         add("seniority", *prefs_mod.seniority_fraction(self.prefs, job))
 
         total = sum(w[k] for k in w if not (k == "clearance" and mode == "ignore"))
-        score = round(100 * earned / total) if total else 0
+        factor, why = self.reach(job)
+        score = round(100 * factor * earned / total) if total else 0
+        if why:
+            reasons.append(f"Above your level, score x{factor:.2g}: " + "; ".join(why))
         hidden = self.hidden_reason(job)
         if hidden:
             score = 0
