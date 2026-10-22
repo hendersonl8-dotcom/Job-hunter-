@@ -83,3 +83,42 @@ def test_remote_reads_work_mode_field_when_present():
     remote, onsite = job(location="Seattle, WA"), job(location="Seattle, WA")
     remote.work_mode, onsite.work_mode = "remote", "on-site"
     assert p.score(remote).score > p.score(onsite).score
+
+
+DIRECTOR = ("Lead the quality assurance and compliance program across all sites. 15+ years of progressive "
+            "leadership experience, including 8+ years managing managers. Own P&L, budget and strategy. "
+            "Supervise QA inspectors, run internal audits, report KPIs and metrics to the executive team, "
+            "manage stakeholders and project schedules.")
+
+
+def test_director_posting_matching_only_general_skills_is_not_a_strong_fit():
+    # It mentions leadership, QA, metrics and scheduling, all of which Logan has, but it's an executive role.
+    fit = profile().score(job(title="Director of Quality", company="Terranium", description=DIRECTOR,
+                              salary_max=230000, clearance="Secret"))
+    assert fit.score < 50
+    assert any(r.startswith("Above your level") for r in fit.reasons)
+
+
+def test_executive_titles_have_their_own_level():
+    assert prefs_mod.seniority(job(title="Director of IT")) == "executive"
+    assert prefs_mod.seniority(job(title="VP, Operations")) == "executive"
+    assert prefs_mod.seniority(job(title="Work Center Supervisor")) == "lead"
+
+
+def test_choosing_executive_seniority_lifts_the_penalty():
+    director = job(title="Director of IT Operations")
+    assert profile(seniority=["executive"]).score(director).score > profile().score(director).score
+
+
+def test_years_well_above_yours_lower_the_score():
+    ask = lambda n: job(description=f"{n}+ years of Windows Server and Active Directory.")
+    assert profile().score(ask(15)).score < profile().score(ask(5)).score
+    assert profile().score(ask(10)).score == profile().score(ask(5)).score  # 8 years covers 10+
+
+
+def test_level_falls_back_to_the_experience_the_posting_asks_for():
+    assert prefs_mod.level_of("IT Support Technician", "Entry-level role, we will train you.") == "entry"
+    assert prefs_mod.level_of("Data Analyst", "0-2 years of SQL experience.") == "entry"
+    assert prefs_mod.level_of("Data Analyst", "3+ years of SQL experience.") == "mid"
+    assert prefs_mod.level_of("Data Analyst", "6+ years of SQL experience.") == "senior"
+    assert prefs_mod.level_of("Data Analyst", "SQL and Power BI.") == ""

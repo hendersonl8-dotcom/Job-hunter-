@@ -19,7 +19,7 @@ MAX_WEIGHT = {"skills": 100}  # every other factor tops out at 30
 CLEARANCE_MODES = {"hold": "I hold a clearance", "grow": "I'm ready to grow one", "ignore": "Clearance doesn't matter"}
 REMOTE_CHOICES = {"any": "No preference", "remote": "Fully remote", "hybrid": "Hybrid is fine", "onsite": "On-site"}
 EMPLOYER_TYPES = ["federal", "contractor", "private"]
-SENIORITY_LEVELS = ["entry", "mid", "senior", "lead"]
+SENIORITY_LEVELS = ["entry", "mid", "senior", "lead", "executive"]
 
 DEFAULTS = {
     "weights": dict(WEIGHTS),
@@ -39,7 +39,8 @@ FEDERAL = re.compile(r"\b(department of|u\.?s\.? (navy|army|air force)|navy|army
 SENIOR_WORDS = {
     "entry": re.compile(r"\b(entry|junior|jr\.?|associate|intern|trainee|apprentice|i)\b|\bgs-?(5|7|9)\b|\blevel 1\b", re.I),
     "senior": re.compile(r"\b(senior|sr\.?|iii|iv|principal|staff|sme|gs-?(12|13|14))\b|\blevel (3|4)\b", re.I),
-    "lead": re.compile(r"\b(lead|manager|director|head of|supervisor|architect|chief)\b", re.I),
+    "executive": re.compile(r"\b(director|head of|chief|vice president|vp|svp|evp|c[eiotf]o)\b", re.I),
+    "lead": re.compile(r"\b(lead|manager|supervisor|architect)\b", re.I),
     "mid": re.compile(r"\b(ii|mid|gs-?(10|11)|level 2)\b", re.I),
 }
 
@@ -67,12 +68,25 @@ def employer_type(job: Job) -> str:
     return "private"
 
 
+ENTRY_TEXT = re.compile(r"\bentry[- ]level\b|\bno experience (required|needed)\b|\bnew grad", re.I)
+FIRST_YEARS = re.compile(r"\b(\d{1,2})\s*\+?\s*(?:-\s*\d{1,2}\s*)?(?:or more\s+)?years?\b", re.I)
+
+
 def seniority(job: Job) -> str:
-    """entry, mid, senior or lead from the title, or "" when it doesn't say."""
-    for level in ("lead", "senior", "entry", "mid"):
-        if SENIOR_WORDS[level].search(job.title):
+    """entry, mid, senior, lead or executive from the title, else from the posting's experience ask, or ""."""
+    return level_of(job.title, job.description)
+
+
+def level_of(title: str, description: str = "") -> str:
+    for level in ("executive", "lead", "senior", "entry", "mid"):
+        if SENIOR_WORDS[level].search(title):
             return level
-    return ""
+    if ENTRY_TEXT.search(description):
+        return "entry"
+    years = next((int(n) for n in FIRST_YEARS.findall(description) if int(n) <= 40), None)
+    if years is None:
+        return ""
+    return "entry" if years <= 2 else "mid" if years <= 4 else "senior"
 
 
 def work_mode(job: Job) -> str:

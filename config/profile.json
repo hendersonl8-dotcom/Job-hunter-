@@ -2,6 +2,7 @@
   "_comment": "Your skills and targets. 'have: true' means it is on your resume or provable from GitHub. Flip a skill to true when you earn it. weight 1-3 = how much it matters when a posting asks for it.",
   "clearance": "TS/SCI",
   "min_salary": 70000,
+  "years_experience": 8,
   "locations": ["Seattle", "Bellevue", "Redmond", "Kirkland", "Bothell", "Everett", "Lynnwood", "Renton", "Kent", "Tukwila", "Tacoma", "Lakewood", "JBLM", "Joint Base Lewis", "Bremerton", "Silverdale", "Bangor", "Keyport", "Kitsap", "Olympia", "Lacey", "Puget Sound", "Washington"],
   "allow_remote": true,
   "tracks": {

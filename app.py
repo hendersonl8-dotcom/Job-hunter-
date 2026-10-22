@@ -13,6 +13,7 @@ from job_hunter import cover_letter as letters
 from job_hunter import (db, export, find_screen, keys, onboarding, onboarding_screen, outcomes_tab, pipeline, preferences_screen,
                         resume_review_screen, role_suggestions_screen, sidebar, theme, tour)
 from job_hunter.backup import backup_database
+from job_hunter import preferences as prefs_mod
 from job_hunter import resume as resumes
 from job_hunter.collect import CollectResult, collect, save_jobs
 from job_hunter.config import ROOT, load_settings
@@ -238,15 +239,22 @@ with jobs_tab:
         status_filter = c2.multiselect("Status", db.STATUSES, default=[s for s in db.STATUSES if s not in ("Skipped", "Rejected")])
         min_score = c3.slider("Minimum fit", 0, 100, 0)
         hide_low_pay = c4.checkbox("Hide jobs under my pay floor", value=True)
+        levels = [*prefs_mod.SENIORITY_LEVELS, "not stated"]
+        level_filter = st.multiselect(
+            "Level", levels, default=levels,
+            help="From the title (Junior, Senior, Lead, Director...), else the years of experience the posting asks for.",
+        )
+        level = {j["key"]: prefs_mod.level_of(j["title"], j["description"] or "") or "not stated" for j in jobs}
 
         shown = [
             j for j in jobs
             if j["track"] in track_filter and j["status"] in status_filter and j["score"] >= min_score
+            and level[j["key"]] in level_filter
             and not (hide_low_pay and j["salary_max"] is not None and j["salary_max"] < profile.min_salary)
         ]
         table = pd.DataFrame(
             [{
-                "Fit": j["score"], "Title": j["title"], "Company": j["company"], "Track": j["track"],
+                "Fit": j["score"], "Title": j["title"], "Company": j["company"], "Track": j["track"], "Level": level[j["key"]],
                 "Pay": money(j["salary_min"], j["salary_max"]), "Clearance": j["clearance"] or "None",
                 "Location": j["location"], "Status": j["status"], "Applied": j.get("applied_at") or "",
                 "Source": j["source"],
