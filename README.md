@@ -35,7 +35,9 @@ Prefer to do it by hand? `py -3 -m venv .venv`, then `.venv\Scripts\python -m pi
 
 ## Where your data lives
 
-Your profile, master resume, job database, backups and every generated resume and letter are stored per user in `%LOCALAPPDATA%\JobHunter` (on Mac or Linux, `~/.local/share/job-hunter`), not in the project folder. Each person who signs in to the PC with their own Windows account gets their own copy, and updating or re-downloading the app never touches it. Set the `JOB_HUNTER_HOME` environment variable to use a different folder, for example to keep a second profile.
+Your profile, master resume, job database, backups and every generated resume and letter are stored per user in `%LOCALAPPDATA%\JobHunter` (on Mac or Linux, `~/.local/share/job-hunter`), not in the project folder. Each person who signs in to the PC with their own Windows account gets their own copy, and updating or re-downloading the app never touches it. Set the `JOB_HUNTER_HOME` environment variable to use a different top folder (mostly useful for tests).
+
+Inside that folder every person has a **profile**: `profiles\<name>\` holds the files in the table below. The Claude key (`keys.json`) is shared by all profiles on the PC. The first time you open a version with profiles, your existing files are moved into `profiles\Main` exactly as they were, and the **Profile** picker at the top of the sidebar opens it.
 
 | File | What it is |
 | --- | --- |
@@ -69,7 +71,22 @@ Job Hunter isn't only for IT: it builds everything from the resume you give it, 
 
 Press **Save and start**. Scoring, search terms and places all come from your resume, with no clearance in your scoring unless your resume lists one.
 
-**Start a new profile** (sidebar) is for a different person or resume on the same computer. It copies the current profile, master resume, search settings and saved jobs to `profiles\<date-time>` in your data folder, clears them, and shows the welcome screen again. Your Claude key stays. To go back, close the app and copy the files from that folder into your data folder.
+**Profiles** (top of the sidebar): pick whose profile is open, or open **Add a profile**, type a name and press the button to start a fresh one for another person on the same computer. They get the welcome screen, then their own resume, saved jobs and settings; nothing of anyone else's is shown. Switching back is one click in the picker.
+
+**Start a new profile** (sidebar, lower down) starts over with a new resume in the *current* profile. It first copies the current profile, master resume, search settings and saved jobs to `profiles\<date-time>`, which then appears in the Profile picker so you can switch back to it.
+
+## Share this app
+
+Give Job Hunter to a friend or family member in a few steps. Nothing of yours goes with it.
+
+1. **Get the installer.** Open the repository on GitHub, then **Actions**, the latest *Windows installer* run, and download `JobHunter-Setup` from **Artifacts** (unzip it to get `JobHunter-Setup.exe`). Send that file, or share the repository link and let them build it. Don't send your data folder.
+2. **They install it.** Windows may show a blue "Windows protected your PC" box because the installer isn't signed: **More info**, then **Run anyway**. It adds Job Hunter to the Start Menu and Desktop.
+3. **Same PC, different person?** Open the app, find **Profile** at the top of the sidebar, open **Add a profile**, type their name and press **Add profile**. They get the welcome screen and their own resume, jobs and settings. Pick a name in the Profile picker to switch. Your profile is never shown to them unless they pick it.
+4. **Their own PC?** Nothing to set up: a new PC starts at the welcome screen.
+5. **Their Claude key.** Tailoring and cover letters are billed to a Claude API key. The welcome screen walks them through making their own at https://console.anthropic.com/ (roughly 10 to 20 cents per tailored resume). On a shared PC, the key is shared by every profile, so use one person's account or paste a different key before each session in the sidebar's **Claude key**.
+6. **Upload their resume** (PDF or Word) and review what Claude proposes. Everything comes from that resume, in any field.
+
+Profiles on one PC are separate folders, not passwords: anyone using that Windows account can pick any profile.
 
 ## Turn on USAJobs
 
