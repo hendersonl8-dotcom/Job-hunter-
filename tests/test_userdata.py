@@ -57,3 +57,58 @@ def test_save_resume_keeps_previous_version(tmp_path):
 def test_settings_point_into_user_folder():
     settings = load_settings()
     assert settings.database.parent == settings.profile.parent == settings.resume.parent == userdata.user_dir()
+
+
+def test_existing_data_moves_into_main_profile_untouched(tmp_path):
+    from job_hunter import profiles
+
+    root = tmp_path / "home"
+    root.mkdir()
+    (root / "resume.json").write_text('{"contact": {"name": "Logan"}}')
+    (root / "profile.json.bak").write_text("old")
+    (root / "backups").mkdir()
+    (root / "backups" / "jobs-1.db").write_bytes(b"backup")
+    db = sqlite3.connect(root / "jobs.db")
+    db.execute("CREATE TABLE jobs (key TEXT)")
+    db.execute("INSERT INTO jobs VALUES ('a')")
+    db.commit()
+    db.close()
+    before = (root / "jobs.db").read_bytes()
+    (root / "keys.json").write_text('{"anthropic_api_key": "k"}')
+    (root / "tour_seen").write_text("1")
+    home = userdata.user_dir()
+    assert home == root / "profiles" / "Main"
+    assert (home / "jobs.db").read_bytes() == before
+    assert json.loads((home / "resume.json").read_text())["contact"]["name"] == "Logan"
+    assert (home / "backups" / "jobs-1.db").read_bytes() == b"backup" and (home / "profile.json.bak").exists()
+    assert (root / "keys.json").exists() and (root / "tour_seen").exists() and not (root / "jobs.db").exists()
+    assert profiles.list_profiles() == ["Main"] and userdata.user_dir() == home
+
+
+def test_profiles_are_separate_and_switchable(tmp_path):
+    from job_hunter import profiles
+
+    userdata.save_resume({"who": "Logan"})
+    assert profiles.create_profile("Sam Lee") == "Sam Lee"
+    assert userdata.load_resume() is None  # Sam starts empty, Logan's resume isn't visible
+    userdata.save_resume({"who": "Sam"})
+    assert profiles.list_profiles() == ["Main", "Sam Lee"]
+    profiles.set_active("Main")
+    assert userdata.load_resume() == {"who": "Logan"}
+    profiles.set_active("Sam Lee")
+    assert userdata.load_resume() == {"who": "Sam"}
+
+
+def test_profile_names_are_checked(tmp_path):
+    import pytest
+    from job_hunter import profiles
+
+    userdata.user_dir()
+    profiles.create_profile("Sam")
+    with pytest.raises(profiles.ProfileError):
+        profiles.create_profile("sam")
+    with pytest.raises(profiles.ProfileError):
+        profiles.create_profile("../..")
+    assert profiles.clean_name("a/b") == "ab"
+    with pytest.raises(profiles.ProfileError):
+        profiles.set_active("nobody")

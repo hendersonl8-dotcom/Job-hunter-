@@ -21,11 +21,11 @@ STEPS = [
 
 
 def seen() -> bool:
-    return (userdata.user_dir() / MARKER).exists()
+    return (userdata.root_dir() / MARKER).exists()
 
 
 def mark_seen() -> None:
-    (userdata.user_dir() / MARKER).write_text("1", encoding="utf-8")
+    (userdata.root_dir() / MARKER).write_text("1", encoding="utf-8")
 
 
 @st.dialog("Welcome to Job Hunter", width="large")

@@ -32,6 +32,7 @@ def connection(path: str):
 
 
 keys.load_into_env()
+sidebar.profile_switcher()
 settings = load_settings()
 if onboarding.needs_onboarding(settings.profile, settings.resume):
     if st.session_state.get("new-profile-saved-to"):

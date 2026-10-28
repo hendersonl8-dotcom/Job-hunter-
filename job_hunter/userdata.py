@@ -1,11 +1,14 @@
 """Where each user's own files live, and the one-time move from the old shared folders.
 
-Everything personal (profile, master resume, database, backups) lives in one folder per
-user, outside the project, so updating or re-cloning the app never touches it:
+Everything personal (profile, master resume, database, backups) lives outside the project, so
+updating or re-cloning the app never touches it. The root folder is
 
     Windows  %LOCALAPPDATA%\\JobHunter        Linux/Mac  ~/.local/share/job-hunter
 
-Set JOB_HUNTER_HOME to use another folder (for a second profile, or for tests).
+and each named profile has its own subfolder, profiles/<name>. user_dir() is the active profile's
+folder. keys.json (the computer owner's Claude key), the tour marker and active_profile.txt stay
+in the root, shared by every profile. See profiles.py for switching and adding profiles.
+Set JOB_HUNTER_HOME to use another root folder (for tests).
 The onboarding screen should call load_resume / save_resume / load_profile / save_profile.
 """
 
@@ -22,8 +25,13 @@ ROOT = Path(__file__).resolve().parent.parent
 PROFILE_FILE, RESUME_FILE, DATABASE_FILE = "profile.json", "resume.json", "jobs.db"
 
 
-def user_dir() -> Path:
-    """The current user's data folder, created and filled on first use."""
+DEFAULT_PROFILE = "Main"
+ACTIVE_FILE, PROFILES_DIR = "active_profile.txt", "profiles"
+SHARED = {"keys.json", "tour_seen", ACTIVE_FILE, PROFILES_DIR}  # stay in the root, not in a profile
+
+
+def root_dir() -> Path:
+    """The top data folder (holds every profile plus the files they share), created on first use."""
     override = os.environ.get("JOB_HUNTER_HOME")
     if override:
         folder = Path(override).expanduser()
@@ -32,7 +40,20 @@ def user_dir() -> Path:
     else:
         folder = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "share") / "job-hunter"
     folder.mkdir(parents=True, exist_ok=True)
-    migrate_legacy(folder)
+    return folder
+
+
+def user_dir() -> Path:
+    """The active profile's data folder, created and filled on first use."""
+    from . import profiles
+
+    root = root_dir()
+    profiles.adopt_existing_data(root)
+    folder = profiles.profile_dir(profiles.active_profile(root), root)
+    first_time = not folder.exists()
+    folder.mkdir(parents=True, exist_ok=True)
+    if first_time and folder.name == DEFAULT_PROFILE:
+        migrate_legacy(folder)
     return folder
 
 

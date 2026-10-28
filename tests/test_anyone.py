@@ -135,7 +135,7 @@ def test_claude_key_is_checked_saved_and_loaded(monkeypatch):
     assert "didn't accept" in keys.check_claude_key("sk-ant-abc", client=SimpleNamespace(models=SimpleNamespace(list=refuse)))
     assert not keys.has_claude_key()
     keys.save_claude_key(" sk-ant-abc ")
-    assert keys.has_claude_key() and json.loads((userdata.user_dir() / "keys.json").read_text()) == {"anthropic_api_key": "sk-ant-abc"}
+    assert keys.has_claude_key() and json.loads((userdata.root_dir() / "keys.json").read_text()) == {"anthropic_api_key": "sk-ant-abc"}
     monkeypatch.delenv("ANTHROPIC_API_KEY")
     keys.load_into_env()
     assert keys.has_claude_key()
@@ -168,4 +168,4 @@ def test_start_a_new_profile_archives_then_clears_but_keeps_the_key(monkeypatch)
     assert not (home / "profile.json").exists() and not (home / "resume.json").exists() and not (home / "search.json").exists()
     assert conn.execute("SELECT COUNT(*) FROM jobs").fetchone()[0] == conn.execute("SELECT COUNT(*) FROM outcomes").fetchone()[0] == 0
     assert onboarding.needs_onboarding(home / "profile.json", home / "resume.json")
-    assert (home / "keys.json").exists()
+    assert (userdata.root_dir() / "keys.json").exists()
