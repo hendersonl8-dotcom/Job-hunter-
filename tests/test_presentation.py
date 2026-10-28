@@ -36,3 +36,16 @@ def test_tour_marker(monkeypatch, tmp_path):
     assert not tour.seen()
     tour.mark_seen()
     assert tour.seen()
+
+
+def test_themes_saved_choice_and_css(tmp_path, monkeypatch):
+    from job_hunter import themes
+    monkeypatch.setenv("JOB_HUNTER_HOME", str(tmp_path))
+    assert themes.saved() == "Teal"
+    themes.save("Dark")
+    assert themes.saved() == "Dark"
+    themes.save("Nope")
+    assert themes.saved() == "Dark"
+    assert "--jh-applied:#2DD4BF" in themes.css("Dark")
+    assert ".stApp" not in themes.css("Teal")
+    assert all(t["accent"] in theme.LOGO_SVG.format(size=1, fill=t["accent"]) for t in themes.THEMES.values())
