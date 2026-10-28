@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import csv
 import re
-from datetime import date
+from datetime import date, datetime, timezone
 
 import pandas as pd
 import streamlit as st
@@ -194,6 +194,21 @@ def apply_dialog(job: dict, resume: dict, letter: dict | None) -> None:
             st.rerun()
 
 
+@st.dialog("Mark these as applied?")
+def bulk_apply_dialog(selected: list[dict]) -> None:
+    st.markdown("Use this for jobs you already applied to on the employer's site. It sets each one to "
+                f"**Applied** with today's date. Nothing is submitted for you.")
+    st.markdown("\n".join(f"- {j['title']} · {j['company']}" for j in selected))
+    c1, c2 = st.columns(2)
+    if c1.button("Yes, mark as applied", type="primary", key="bulk-apply-yes"):
+        for j in selected:
+            db.mark_applied(conn, j["key"], date.today().isoformat())
+        st.toast(f"Marked {len(selected)} as Applied.")
+        st.rerun()
+    if c2.button("Cancel", key="bulk-apply-cancel"):
+        st.rerun()
+
+
 def history_panel(job: dict) -> None:
     history = db.document_history(conn, job["key"])
     if not history:
@@ -234,33 +249,68 @@ with jobs_tab:
     if not jobs:
         st.info("No jobs yet. Use **Find jobs** or paste one in **Add a job**.")
     else:
+        if "last-visit" not in st.session_state:
+            st.session_state["last-visit"] = job_filters.touch_last_visit(datetime.now(timezone.utc).isoformat(timespec="seconds"))
+        fresh = job_filters.new_since(jobs, st.session_state["last-visit"])
+        if fresh:
+            st.success(f"{len(fresh)} new since your last visit.")
+        tracks = sorted({j["track"] for j in jobs})
+        levels = [*prefs_mod.SENIORITY_LEVELS, "not stated"]
+        defaults = {"jobs-view": "Open", "jobs-tracks": tracks, "jobs-min-fit": 0, "jobs-min-pay": int(profile.min_salary),
+                    "jobs-hide-unlisted": False, "jobs-levels": levels, "jobs-sort": job_filters.SORTS[0]}
+        for key_, value in defaults.items():
+            st.session_state.setdefault(key_, value)
+
+        saved_views = job_filters.load_view_settings()["presets"]
+        p1, p2, p3 = st.columns([2, 2, 1])
+        chosen = p1.selectbox("Saved searches", ["(choose one)", *saved_views], key="jobs-preset-pick")
+        if chosen != "(choose one)" and st.session_state.get("jobs-preset-applied") != chosen:
+            st.session_state["jobs-preset-applied"] = chosen
+            for key_, value in saved_views[chosen].items():
+                if key_ in defaults:
+                    st.session_state[key_] = value
+            st.rerun()
+        if chosen == "(choose one)":
+            st.session_state.pop("jobs-preset-applied", None)
+        elif p3.button("Delete", key="jobs-preset-delete"):
+            job_filters.delete_preset(chosen)
+            st.session_state.pop("jobs-preset-applied", None)
+            st.rerun()
+
         view = st.segmented_control(
-            "Show", list(job_filters.VIEWS), default="Open",
+            "Show", list(job_filters.VIEWS),
             format_func=lambda v: job_filters.view_label(v, jobs), key="jobs-view",
         ) or "Open"
-        tracks = sorted({j["track"] for j in jobs})
-        c1, c2, c3, c4 = st.columns(4)
-        track_filter = c1.multiselect("Track", tracks, default=tracks)
-        min_score = c2.slider("Minimum fit", 0, 100, 0)
-        min_pay = c3.number_input("Minimum salary ($/yr)", min_value=0, step=5000, value=int(profile.min_salary),
+        c1, c2, c3, c4, c5 = st.columns(5)
+        track_filter = c1.multiselect("Track", tracks, key="jobs-tracks")
+        min_score = c2.slider("Minimum fit", 0, 100, key="jobs-min-fit")
+        min_pay = c3.number_input("Minimum salary ($/yr)", min_value=0, step=5000, key="jobs-min-pay",
                                   help="Hides jobs whose top pay is under this. Set to 0 to show every job.")
-        hide_unlisted = c4.checkbox("Hide jobs with no pay listed", value=False)
-        levels = [*prefs_mod.SENIORITY_LEVELS, "not stated"]
+        hide_unlisted = c4.checkbox("Hide jobs with no pay listed", key="jobs-hide-unlisted")
+        sort_by = c5.selectbox("Sort by", job_filters.SORTS, key="jobs-sort")
         level_filter = st.multiselect(
-            "Level", levels, default=levels,
+            "Level", levels, key="jobs-levels",
             help="From the title (Junior, Senior, Lead, Director...), else the years of experience the posting asks for.",
         )
+        with p2.popover("Save these filters as a search"):
+            preset_name = st.text_input("Name", key="jobs-preset-name")
+            if st.button("Save search", disabled=not preset_name.strip(), key="jobs-preset-save"):
+                job_filters.save_preset(preset_name, {k: st.session_state[k] for k in defaults})
+                st.session_state["jobs-preset-applied"] = preset_name.strip()
+                st.rerun()
         level = {j["key"]: prefs_mod.level_of(j["title"], j["description"] or "") or "not stated" for j in jobs}
+        fresh_keys = {j["key"] for j in fresh}
 
-        shown = [
+        shown = job_filters.sort_jobs([
             j for j in jobs
             if j["track"] in track_filter and j["status"] in job_filters.VIEWS[view] and j["score"] >= min_score
             and level[j["key"]] in level_filter
             and job_filters.meets_min_salary(j, min_pay, hide_unlisted)
-        ]
+        ], sort_by)
         table = pd.DataFrame(
             [{
-                "Fit": j["score"], "Title": j["title"], "Company": j["company"], "Track": j["track"], "Level": level[j["key"]],
+                "Fit": j["score"], "Title": ("🆕 " if j["key"] in fresh_keys else "") + j["title"], "Company": j["company"],
+                "Track": j["track"], "Level": level[j["key"]],
                 "Pay": money(j["salary_min"], j["salary_max"]), "Clearance": j["clearance"] or "None",
                 "Location": j["location"], "Status": j["status"], "Applied": j.get("applied_at") or "",
                 "Source": j["source"],
@@ -269,11 +319,15 @@ with jobs_tab:
         if view == "Saved" and not shown:
             st.info("No saved jobs match these filters. Open a job below and press **Save this job** to keep it here.")
         st.caption(f"{len(shown)} of {len(jobs)} jobs. Tick rows to compare them or see details.")
+        st.download_button("Export my pipeline (CSV)", job_filters.pipeline_csv(jobs), "job_pipeline.csv", "text/csv",
+                           help="Saved, Applied, Interviewing and Offer jobs, for a spreadsheet.")
         picked = st.dataframe(
             table, hide_index=True, width="stretch", on_select="rerun", selection_mode="multi-row",
             column_config={"Fit": st.column_config.ProgressColumn("Fit", min_value=0, max_value=100, format="%d")},
         )
         st.session_state["picked"] = [shown[i]["key"] for i in picked.selection.rows]
+        if st.session_state["picked"] and st.button(f"Mark {len(st.session_state['picked'])} selected as applied"):
+            bulk_apply_dialog([j for j in shown if j["key"] in st.session_state["picked"]])
 
         for key in st.session_state["picked"][:1]:
             job = next(j for j in jobs if j["key"] == key)
