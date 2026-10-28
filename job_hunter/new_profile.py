@@ -1,7 +1,7 @@
 """Start over with a different resume without losing the old one.
 
 The current profile, master resume, search settings and job list are copied into
-profiles/<date-time>/ in the user's data folder, then cleared so the welcome screen runs again.
+profiles/<date-time>/ in the data folder, where it also shows up in the sidebar's profile switcher, then cleared so the welcome screen runs again.
 The Claude key stays, since it belongs to the computer's owner. To go back, copy the files from
 the archive folder into the data folder (see the README).
 """
@@ -19,7 +19,7 @@ from .config import SEARCH_FILE
 def start_new_profile(conn: sqlite3.Connection, now: datetime | None = None):
     """Archive, then clear, the current profile. Returns the archive folder."""
     home = userdata.user_dir()
-    archive = home / "profiles" / (now or datetime.now()).strftime("%Y%m%d-%H%M%S")
+    archive = userdata.root_dir() / userdata.PROFILES_DIR / (now or datetime.now()).strftime("%Y%m%d-%H%M%S")
     archive.mkdir(parents=True, exist_ok=True)
     names = (userdata.PROFILE_FILE, userdata.RESUME_FILE, SEARCH_FILE)
     for name in names:

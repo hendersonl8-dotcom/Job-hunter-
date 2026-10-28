@@ -22,7 +22,7 @@ def has_claude_key() -> bool:
 
 
 def _path():
-    return userdata.user_dir() / KEYS_FILE
+    return userdata.root_dir() / KEYS_FILE
 
 
 def _saved() -> dict:
