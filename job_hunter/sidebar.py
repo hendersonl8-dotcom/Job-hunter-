@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import streamlit as st
 
-from job_hunter import key_screen, new_profile, profiles
+from job_hunter import key_screen, new_profile, profiles, theme
 
 SESSION_PREFIXES = ("keep-", "role-", "welcome-", "find-", "board-", "tailor-", "letter-")
 
@@ -45,6 +45,7 @@ def profile_switcher() -> None:
 
 def render(conn) -> None:
     with st.sidebar:
+        theme.render_theme_picker()
         with st.expander("Claude key"):
             key_screen.claude_key_panel("side-")
         with st.expander("Start a new profile"):
