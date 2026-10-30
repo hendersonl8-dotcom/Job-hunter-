@@ -33,6 +33,18 @@ That creates the virtual environment, installs the requirements and puts a **Job
 
 Prefer to do it by hand? `py -3 -m venv .venv`, then `.venv\Scripts\python -m pip install -r requirements.txt`, then `.venv\Scripts\streamlit run app.py`.
 
+## Resume builder
+
+A separate app, just for building and editing your resume. Every role and project from your master resume gets a dropdown: pick the points you want, in the order you want them, reword any of them, or add a point of your own. The resume preview beside it updates as you go, and **Download Word** or **Download PDF** gives you the finished file (Word is best if you want to keep editing). Save a set of picks as a named draft to come back to it. It reads your master resume but never changes it, and drafts are kept with your profile in `resume_drafts\`.
+
+Start it with the **Resume Builder** shortcut that `install.ps1` puts on your Desktop, or in PowerShell from the project folder:
+
+```powershell
+.venv\Scripts\streamlit run resume_builder.py --server.port 8502
+```
+
+It opens at `http://localhost:8502`, so it can run next to the Job Hunter dashboard (`http://localhost:8501`).
+
 ## Where your data lives
 
 Your profile, master resume, job database, backups and every generated resume and letter are stored per user in `%LOCALAPPDATA%\JobHunter` (on Mac or Linux, `~/.local/share/job-hunter`), not in the project folder. Each person who signs in to the PC with their own Windows account gets their own copy, and updating or re-downloading the app never touches it. Set the `JOB_HUNTER_HOME` environment variable to use a different top folder (mostly useful for tests).

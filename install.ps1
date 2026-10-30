@@ -1,7 +1,7 @@
 # One-step install for Windows. From this folder in PowerShell:
 #   powershell -ExecutionPolicy Bypass -File .\install.ps1
-# Creates the virtual environment, installs the requirements, and puts a "Job Hunter"
-# shortcut on your Desktop. Safe to run again (it updates the requirements).
+# Creates the virtual environment, installs the requirements, and puts "Job Hunter" and
+# "Resume Builder" shortcuts on your Desktop. Safe to run again (it updates the requirements).
 $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 
@@ -32,13 +32,25 @@ Set-Content -Path $launcher -Encoding ASCII -Value @(
     ".venv\Scripts\streamlit.exe run app.py"
 )
 
+# The resume builder is a separate app on its own port, so both can be open at once.
+$builder = Join-Path $PSScriptRoot "Resume Builder.cmd"
+Set-Content -Path $builder -Encoding ASCII -Value @(
+    "@echo off",
+    "cd /d ""%~dp0""",
+    "title Resume Builder - close this window to stop it",
+    ".venv\Scripts\streamlit.exe run resume_builder.py --server.port 8502"
+)
+
 $desktop = [Environment]::GetFolderPath("Desktop")
-$shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut((Join-Path $desktop "Job Hunter.lnk"))
-$shortcut.TargetPath = $launcher
-$shortcut.WorkingDirectory = $PSScriptRoot
-$shortcut.Save()
+foreach ($pair in @(@("Job Hunter", $launcher), @("Resume Builder", $builder))) {
+    $shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut((Join-Path $desktop "$($pair[0]).lnk"))
+    $shortcut.TargetPath = $pair[1]
+    $shortcut.WorkingDirectory = $PSScriptRoot
+    $shortcut.Save()
+}
 
 $data = Join-Path $env:LOCALAPPDATA "JobHunter"
 Write-Host ""
 Write-Host "Done. Double-click 'Job Hunter' on your Desktop to start it (it opens at http://localhost:8501)."
+Write-Host "Double-click 'Resume Builder' for the resume builder (it opens at http://localhost:8502)."
 Write-Host "Your profile, resume and jobs are kept in $data, separate from this folder."

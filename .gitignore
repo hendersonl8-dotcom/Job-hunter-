@@ -10,6 +10,7 @@ output/
 
 *.bak
 Job Hunter.cmd
+Resume Builder.cmd
 .build-venv/
 build/
 dist/
