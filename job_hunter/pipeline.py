@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import streamlit as st
 
+from datetime import date
+
 from . import db
 from .theme import STAGE_COLORS, STAGES, badge, band, escape
 
@@ -20,11 +22,63 @@ def top_new(jobs: list[dict], pay_floor: float, limit: int = 5) -> list[dict]:
     return sorted(fresh, key=lambda j: -j["score"])[:limit]
 
 
+STAGE_HELP = {
+    "Saved": "Worth applying to",
+    "Applied": "Waiting to hear back",
+    "Interviewing": "Prepare and follow up",
+    "Offer": "Time to decide",
+}
+
+
+def next_step(jobs: list[dict], pay_floor: float, today: date | None = None) -> tuple[str, str, str]:
+    """(label, what to do, why) for the single most useful thing to do now. The most advanced stage wins."""
+    today = today or date.today()
+    if not jobs:
+        return ("Start here", "Find your first jobs", "Open **Find jobs** to search, or **Add a job** to paste one in.")
+    stages = by_stage(jobs)
+    if stages["Offer"]:
+        j = stages["Offer"][0]
+        return ("Do this next", f"Decide on the offer from {j['company']}", f"{j['title']} is at the Offer stage.")
+    if stages["Interviewing"]:
+        j = stages["Interviewing"][0]
+        return ("Do this next", f"Prepare for your interview at {j['company']}", f"{j['title']} is at the Interviewing stage.")
+    stale = [j for j in stages["Applied"] if _days_since(j.get("applied_at"), today) >= 7]
+    if stale:
+        j = max(stale, key=lambda j: _days_since(j.get("applied_at"), today))
+        return ("Do this next", f"Follow up with {j['company']}",
+                f"You applied {_days_since(j.get('applied_at'), today)} days ago and haven't heard back.")
+    if stages["Saved"]:
+        j = stages["Saved"][0]
+        return ("Do this next", f"Apply to {j['title']} at {j['company']}",
+                f"It's your best saved job (fit {j['score']}). Open it in the **Jobs** tab to tailor your resume.")
+    picks = top_new(jobs, pay_floor, 1)
+    if picks:
+        j = picks[0]
+        return ("Do this next", f"Look at {j['title']} at {j['company']}",
+                f"It's the best match you haven't reviewed (fit {j['score']}). Save it if you like it.")
+    if stages["Applied"]:
+        return ("All caught up", "Nothing urgent. Your applications are out there.", "Check back in a few days, or find more jobs.")
+    return ("Do this next", "Find more jobs", "Nothing new to review. Try **Find jobs** with a different search.")
+
+
+def _days_since(day: str | None, today: date) -> int:
+    try:
+        return (today - date.fromisoformat((day or "")[:10])).days
+    except ValueError:
+        return 0
+
+
+def next_html(label: str, action: str, why: str) -> str:
+    return (f'<div class="jh-next"><div class="k">{escape(label)}</div>'
+            f'<div class="m">{escape(action)}</div><div class="h">{escape(why).replace("**", "")}</div></div>')
+
+
 def card_html(job: dict, color: str) -> str:
     where = f" · {escape(job['location'])}" if job["location"] else ""
+    applied = f" · applied {escape(job['applied_at'][:10])}" if job["status"] == "Applied" and job.get("applied_at") else ""
     return (f'<div class="jh-card" style="border-left-color:{color}">'
             f'<div class="t">{escape(job["title"])}</div>'
-            f'<div class="c">{escape(job["company"])}{where}</div>'
+            f'<div class="c">{escape(job["company"])}{where}{applied}</div>'
             f'<div style="margin-top:4px">{badge(job["score"])}</div></div>')
 
 
@@ -44,6 +98,8 @@ def render(conn, jobs: list[dict], pay_floor: float) -> None:
     if not jobs:
         st.info("Your pipeline is empty. Go to **Find jobs** to search, or **Add a job** to paste one in.")
         return
+
+    st.markdown(next_html(*next_step(jobs, pay_floor)), unsafe_allow_html=True)
 
     stages = by_stage(jobs)
     counts = {s: len(stages[s]) for s in STAGES}
@@ -65,7 +121,8 @@ def render(conn, jobs: list[dict], pay_floor: float) -> None:
     for col, stage in zip(st.columns(len(STAGES)), STAGES):
         with col:
             st.markdown(f'<div class="jh-stage" style="border-color:{STAGE_COLORS[stage]}">'
-                        f'{stage} ({counts[stage]})</div>', unsafe_allow_html=True)
+                        f'{stage} ({counts[stage]})</div>'
+                        f'<div class="jh-stage-help">{STAGE_HELP[stage]}</div>', unsafe_allow_html=True)
             if not stages[stage]:
                 st.markdown('<div class="jh-empty">Nothing here yet</div>', unsafe_allow_html=True)
             for job in stages[stage]:
