@@ -60,6 +60,7 @@ def css(name: str) -> str:
            f"--jh-interviewing:{s[2]}; --jh-offer:{s[3]};}}")
     if name == DEFAULT:
         return out
+    on_accent = t["bg"] if name == "Dark" else "#fff"
     return out + (
         f".stApp,[data-testid='stHeader']{{background:{t['bg']}; color:{t['text']};}}"
         f"[data-testid='stSidebar']{{background:{t['panel']};}}"
@@ -67,11 +68,20 @@ def css(name: str) -> str:
         f".stApp [data-testid='stMarkdownContainer']{{color:{t['text']};}}"
         f".stApp a{{color:{t['accent']};}}"
         f".stApp button[kind='primary'],.stApp [data-testid='stBaseButton-primary']"
-        f"{{background:{t['accent']}; border-color:{t['accent']}; color:{t['bg'] if name == 'Dark' else '#fff'};}}"
+        f"{{background:{t['accent']}; border-color:{t['accent']}; color:{on_accent};}}"
         f".stApp button[kind='secondary'],.stApp [data-testid='stBaseButton-secondary']"
         f"{{background:{t['panel']}; color:{t['text']}; border-color:{t['line']};}}"
         f".stApp input,.stApp textarea,.stApp [data-baseweb='select'] div,.stApp [data-baseweb='input']"
         f"{{background:{t['panel']}; color:{t['text']};}}"
         f"[data-testid='stExpander'],[data-testid='stExpander'] details{{border-color:{t['line']};}}"
         f".stApp [data-baseweb='tab-highlight']{{background:{t['accent']};}}"
+        # The broad rules above also hit things that carry their own colour. Put those back, accent-filled:
+        # selected chips in multiselects (Track, Level) and the selected segment of the Show switcher.
+        f".stApp [data-baseweb='tag'],.stApp [data-baseweb='tag'] div,.stApp [data-baseweb='tag'] span,"
+        f".stApp [data-testid='stBaseButton-segmented_controlActive'],"
+        f".stApp [data-testid='stBaseButton-segmented_controlActive'] *"
+        f"{{background:{t['accent']}; color:{on_accent};}}"
+        f".stApp [data-testid='stBaseButton-segmented_control']{{background:{t['panel']}; color:{t['text']};"
+        f" border-color:{t['line']};}}"
+        f".stApp [data-testid='stBaseButton-segmented_control'] *{{background:transparent; color:{t['text']};}}"
     )
