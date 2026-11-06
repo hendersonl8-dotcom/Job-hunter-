@@ -22,7 +22,7 @@ Job Hunter is installed with **`JobHunter-Setup.exe`**. That is the one version 
 
 1. Open the repository on GitHub, click **Releases** on the right, and download `JobHunter-Setup.exe` from the newest release.
 2. Run it. Windows may show a blue "Windows protected your PC" box because the installer isn't signed: click **More info**, then **Run anyway**.
-3. Double-click **Job Hunter** on the Desktop or in the Start Menu. It opens in its own window, and closing the window stops it.
+3. Double-click **Job Hunter** on the Desktop or in the Start Menu. A short splash screen appears, then the app opens in its own window (no browser tab, no black console window), straight to Home. Closing the window stops it.
 
 Your data stays in `%LOCALAPPDATA%\JobHunter`, so installing a newer version over the old one keeps everything. To update, download the newest `JobHunter-Setup.exe` from Releases and run it again.
 
@@ -34,11 +34,13 @@ The **Resume builder** is a tab inside Job Hunter, next to Tools and Preferences
 
 ## For developers
 
-Running from the source code is only for changing the app. You need Python 3.11 or newer; then, in PowerShell in the project folder:
+Running from the source code is only for changing the app. Regular users should use the installer above. You need Python 3.11 or newer. Open PowerShell, go to the project folder (`cd` into it), and run the script as a file, exactly like this:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
+
+Don't copy the contents of `install.ps1` into PowerShell: the script finds its own folder, so pasting it fails. Run the file.
 
 That creates the virtual environment, installs the requirements and pywebview, and puts a **Job Hunter** shortcut on your Desktop that opens the app in its own window (no browser, no console), straight to the Home dashboard. If an existing shortcut still opens a browser tab, run `install.ps1` again to update it. By hand: `.venv\Scripts\pythonw desktop.py` for the window, or, for development, `py -3 -m venv .venv`, `.venv\Scripts\python -m pip install -r requirements.txt`, then `.venv\Scripts\streamlit run app.py` (opens at `http://localhost:8501`). Build the installer locally with `packaging\build.ps1`.
 
