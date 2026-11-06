@@ -9,14 +9,24 @@ from . import userdata
 MARKER = "tour_seen"
 
 STEPS = [
+    ("Welcome", "Job Hunter finds jobs that fit your resume, scores each one, rewrites your resume and "
+                "writes a cover letter for the ones you pick, and keeps track of where you applied. "
+                "This takes about a minute."),
     ("Home", "Your whole search on one page: new matches worth a look, and your jobs laid out as "
-             "Saved, Applied, Interviewing and Offer. Each job has a fit score from 0 to 100."),
-    ("Find jobs", "Search public job boards in one click. You can also paste a posting from LinkedIn, "
-                  "Glassdoor or Indeed in **Add a job**."),
-    ("Jobs", "The full list with filters. Pick a job to see why it scored the way it did, tailor your "
-             "resume, write a cover letter and apply."),
+             "Saved, Applied, Interviewing and Offer. Each job has a fit score from 0 to 100. "
+             "Use the menu on a card to move it along."),
+    ("Find jobs", "Search public job boards in one click, for your own city or for remote work. "
+                  "LinkedIn, Glassdoor and Indeed can't be searched here, so paste a posting from "
+                  "them into **Add a job**."),
+    ("Jobs and Compare", "The full list with filters and saved searches. Pick a job to see why it "
+                         "scored the way it did, or put two to four side by side in **Compare**."),
+    ("Tailor and apply", "Pick a job, then tailor your resume and write a cover letter for it. "
+                         "Anything the posting wants that your resume can't back up is flagged, "
+                         "never invented."),
     ("You stay in charge", "Nothing is ever sent for you. **Apply** asks you to confirm, then hands you "
                            "your files and the link so you can submit on the employer's site."),
+    ("Make it yours", "Pick a **Colour theme** in the sidebar, switch **Profile** if someone else "
+                      "shares this computer, and use **Take the tour again** whenever you like."),
 ]
 
 
@@ -35,6 +45,7 @@ def _dialog() -> None:
     st.progress((step + 1) / len(STEPS), text=f"Step {step + 1} of {len(STEPS)}")
     st.subheader(title)
     st.markdown(body)
+    st.write("")
     c1, c2, c3 = st.columns([1, 1, 3])
     if step and c1.button("Back", key="tour-back"):
         st.session_state["tour-step"] = step - 1
