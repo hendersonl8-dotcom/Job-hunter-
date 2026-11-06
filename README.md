@@ -13,6 +13,7 @@ Pick any job and it tailors your resume and writes a cover letter for that posti
 - **Compares 2 to 4 jobs** side by side and tracks status (Saved, Applied, Interviewing and so on) with notes.
 - **Tailors your resume** to a job in one click: it reorders and rewords your own bullets toward the posting, lists what it changed and why, lists what the posting wants that you can't claim yet, and exports Word and PDF.
 - **Writes a cover letter** for the job from the same facts, exported as Word and PDF.
+- **Tracks your pipeline:** the Home tab shows a **Do this next** card, follow-up reminders for applications with no reply (with a note you copy and send yourself), and charts of your funnel, weekly applications, replies by track and pay against fit.
 - **Apply button:** asks you to confirm before anything happens, hands you the tailored resume and cover letter to download, marks the job Applied with today's date, and opens the employer's application page. You do the final submit on their site, so nothing is ever sent in your name without you seeing it.
 
 ## Install (Windows)
@@ -29,7 +30,7 @@ No release yet? The repository owner makes one under **Actions**, *Windows insta
 
 ## Resume Builder
 
-The **Resume Builder** is a tab inside Job Hunter. Every role and project from your master resume gets a dropdown: pick the points you want, in the order you want them, reword any of them, or add a point of your own. The preview beside it updates as you go, and **Download Word** or **Download PDF** gives you the finished file (Word is best if you want to keep editing). Save a set of picks as a named draft to come back to it. It reads your master resume but never changes it, and drafts are kept with your profile in `resume_drafts\`.
+The **Resume builder** is a tab inside Job Hunter, next to Tools and Preferences. Every role and project from your master resume gets a dropdown: pick the points you want, in the order you want them, reword any of them, or add a point of your own. The preview beside it updates as you go, and **Download Word** or **Download PDF** gives you the finished file (Word is best if you want to keep editing). Save a set of picks as a named draft to come back to it. It reads your master resume but never changes it, and drafts are kept with your profile in `resume_drafts\`.
 
 ## For developers
 
