@@ -39,7 +39,7 @@ Running from the source code is only for changing the app. You need Python 3.11 
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
-That creates the virtual environment, installs the requirements and puts shortcuts on your Desktop. By hand: `py -3 -m venv .venv`, `.venv\Scripts\python -m pip install -r requirements.txt`, then `.venv\Scripts\streamlit run app.py` (opens at `http://localhost:8501`). Build the installer locally with `packaging\build.ps1`.
+That creates the virtual environment, installs the requirements and pywebview, and puts a **Job Hunter** shortcut on your Desktop that opens the app in its own window (no browser, no console), straight to the Home dashboard. If an existing shortcut still opens a browser tab, run `install.ps1` again to update it. By hand: `.venv\Scripts\pythonw desktop.py` for the window, or, for development, `py -3 -m venv .venv`, `.venv\Scripts\python -m pip install -r requirements.txt`, then `.venv\Scripts\streamlit run app.py` (opens at `http://localhost:8501`). Build the installer locally with `packaging\build.ps1`.
 
 ## Where your data lives
 

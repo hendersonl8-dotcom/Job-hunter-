@@ -2,6 +2,10 @@
 # Skips Streamlit's first-run email prompt, which otherwise stops the app from starting.
 headless = true
 
+[client]
+# Hides Streamlit's developer menu and "Deploy" button so it looks like an app, not a dev tool.
+toolbarMode = "minimal"
+
 [browser]
 gatherUsageStats = false
 
