@@ -1,15 +1,15 @@
 # Job Hunter
 
-Finds Seattle-area jobs, scores each one against your skills, and lets you compare them side by side.
+Finds jobs near you (any city, or remote), in any field, scores each one against your skills, and lets you compare them side by side.
 
 Pick any job and it tailors your resume and writes a cover letter for that posting with Claude, then walks you through applying.
 
 ## What it does
 
-- **Pulls jobs** from USAJobs (federal jobs around Seattle, JBLM and Kitsap) and from any company job board hosted on Greenhouse or Lever.
+- **Pulls jobs** from USAJobs (federal jobs anywhere in the US) and from any company job board hosted on Greenhouse or Lever.
 - **Takes jobs you paste** from LinkedIn, Glassdoor, Indeed or anywhere else. It never scrapes LinkedIn or Glassdoor, because their terms forbid it and accounts that use bots get restricted.
 - **Scores every job 0 to 100** and shows why: skills you have versus skills it asks for (70), clearance (10), pay against your floor (10), and location (10).
-- **Sorts jobs into tracks:** IT / Systems Admin, Data Analyst, Project Manager, Quality / Operations.
+- **Sorts jobs into tracks** built from your resume (for the original author: IT / Systems Admin, Data Analyst, Project Manager, Quality / Operations; for a nurse, teacher or electrician, their own families).
 - **Compares 2 to 4 jobs** side by side and tracks status (Saved, Applied, Interviewing and so on) with notes.
 - **Tailors your resume** to a job in one click: it reorders and rewords your own bullets toward the posting, lists what it changed and why, lists what the posting wants that you can't claim yet, and exports Word and PDF.
 - **Writes a cover letter** for the job from the same facts, exported as Word and PDF.
@@ -107,11 +107,11 @@ Profiles on one PC are separate folders, not passwords: anyone using that Window
 
 (Setting `USAJOBS_API_KEY` and `USAJOBS_EMAIL` as environment variables still works and takes priority.)
 
-On **Find jobs** the search terms and location are pre-filled and editable, and you can tick Seattle-area Greenhouse and Lever company boards instead of editing `settings.toml`. LinkedIn and Glassdoor stay paste-only in **Add a job**.
+On **Find jobs** the search terms and location are pre-filled and editable, and you pick your own places (or a ready-made area such as Seattle, San Diego or Norfolk) and tick Greenhouse and Lever company boards for them, or type any other board instead of editing `settings.toml`. LinkedIn and Glassdoor stay paste-only in **Add a job**.
 
-## Load the Seattle shortlist
+## Load a job list (optional)
 
-Open **Add a job** and press **Load seattle-sweep-2026-10-19** to add the 34 Seattle-area postings researched for you, scored against your profile. You can also upload any CSV with the same columns (title, employer, location, pay_min, pay_max, clearance, key_requirements, posting_url).
+The repository includes example Seattle-area lists from the original author's search. Open **Add a job** and press **Load seattle-sweep-2026-10-19** to add the 34 Seattle-area postings researched for you, scored against your profile. You can also upload any CSV with the same columns (title, employer, location, pay_min, pay_max, clearance, key_requirements, posting_url).
 
 ## Add company job boards
 

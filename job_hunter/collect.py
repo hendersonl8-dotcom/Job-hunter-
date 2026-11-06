@@ -81,7 +81,9 @@ def collect(settings: Settings, conn: sqlite3.Connection, profile: Profile, sess
         searches = [(a.usajobs_location, False) for a in areas]
     else:
         terms = None
-        searches = [(settings.usajobs_location, False)]
+        # A profile built from someone's resume searches where they said, not the Seattle default.
+        own_place = profile.locations[0] if profile.data.get("generated") and profile.locations else ""
+        searches = [(own_place or settings.usajobs_location, False)]
     if mode == "only":
         searches = [("", True)]  # remote jobs anywhere, so no place to search
 

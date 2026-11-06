@@ -49,3 +49,13 @@ def test_themes_saved_choice_and_css(tmp_path, monkeypatch):
     assert "--jh-applied:#2DD4BF" in themes.css("Dark")
     assert ".stApp" not in themes.css("Teal")
     assert all(t["accent"] in theme.LOGO_SVG.format(size=1, fill=t["accent"]) for t in themes.THEMES.values())
+
+
+def test_theme_css_keeps_selected_chips_and_segments_coloured():
+    from job_hunter import themes
+    for name in themes.THEMES:
+        css = themes.css(name)
+        if name == themes.DEFAULT:
+            continue
+        assert "[data-baseweb='tag']" in css
+        assert "stBaseButton-segmented_controlActive" in css
