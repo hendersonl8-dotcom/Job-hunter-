@@ -38,18 +38,20 @@ def render(settings: Settings, conn, profile: Profile) -> None:
 
     keywords = st.text_area("Search terms (one per line)", height=120, key="find-keywords",
                             value="\n".join(keywords_default(settings, prefs, profile)))
-    saved_areas = [a for a in prefs.get("areas", []) if a in AREAS] or ["Seattle"]
+    own = bool(profile.data.get("generated"))  # built from someone's resume: start from their places, not Seattle
+    saved_areas = [a for a in prefs.get("areas", []) if a in AREAS] or ([] if own else ["Seattle"])
     areas = st.multiselect("Search areas", list(AREAS), default=saved_areas, key="find-areas",
                            help="Each area is searched on USAJobs and its company boards. Pick as many as you like.")
-    custom = st.text_area("Other places (optional, one per line, like Austin, Texas)", height=70, key="find-custom-areas",
-                          value="\n".join(a for a in prefs.get("areas", []) if a not in AREAS))
+    custom = st.text_area("Your places (one per line, like Austin, Texas)", height=70, key="find-custom-areas",
+                          value="\n".join([a for a in prefs.get("areas", []) if a not in AREAS]
+                                           or ([] if prefs.get("areas") or not own else profile.locations[:3])))
     areas += [line.strip() for line in custom.splitlines() if line.strip()]
     mode_label = st.radio("Remote jobs", list(REMOTE_CHOICES), index=list(REMOTE_CHOICES.values()).index(prefs.get("remote_mode", "include")),
                           horizontal=True, key="find-remote-mode")
     remote_mode = REMOTE_CHOICES[mode_label]
 
     with st.expander("USAJobs key (one time)", expanded=not (settings.usajobs_api_key and settings.usajobs_email)):
-        st.markdown("Federal jobs (JBLM, Kitsap, VA) need a free key from "
+        st.markdown("Federal jobs (any US location) need a free key from "
                     "[developer.usajobs.gov](https://developer.usajobs.gov/apirequest/). Paste it once; it is saved on this computer only.")
         key = st.text_input("USAJobs API key", value=prefs.get("usajobs_api_key", ""), type="password")
         email = st.text_input("Email you registered it with", value=prefs.get("usajobs_email", ""))
