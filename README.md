@@ -91,7 +91,7 @@ Press **Save and start**. Scoring, search terms and places all come from your re
 
 Give Job Hunter to a friend or family member in a few steps. Nothing of yours goes with it.
 
-1. **Get the installer.** Open the repository on GitHub, then **Actions**, the latest *Windows installer* run, and download `JobHunter-Setup` from **Artifacts** (unzip it to get `JobHunter-Setup.exe`). Send that file, or share the repository link and let them build it. Don't send your data folder.
+1. **Get the installer.** Open the repository on GitHub, click **Releases** on the right, and download `JobHunter-Setup.exe` from the newest release. (To make a new release: **Actions**, *Windows installer*, **Run workflow**; it builds the installer and publishes it as a release. Pull-request runs only keep it under **Artifacts**.) Send that file, or share the repository link and let them build it. Don't send your data folder.
 2. **They install it.** Windows may show a blue "Windows protected your PC" box because the installer isn't signed: **More info**, then **Run anyway**. It adds Job Hunter to the Start Menu and Desktop.
 3. **Same PC, different person?** Open the app, find **Profile** at the top of the sidebar, open **Add a profile**, type their name and press **Add profile**. They get the welcome screen and their own resume, jobs and settings. Pick a name in the Profile picker to switch. Your profile is never shown to them unless they pick it.
 4. **Their own PC?** Nothing to set up: a new PC starts at the welcome screen.
