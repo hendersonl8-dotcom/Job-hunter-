@@ -22,26 +22,29 @@ Write-Host "Installing requirements (a minute or two the first time)..."
 & .\.venv\Scripts\python.exe -m pip install --quiet --upgrade pip
 & .\.venv\Scripts\python.exe -m pip install --quiet -r requirements.txt
 if ($LASTEXITCODE -ne 0) { Write-Host "Installing the requirements failed. Check your internet connection and run this again."; exit 1 }
+# pywebview gives the app its own window (no browser). Optional: without it the app opens in the browser.
+& .\.venv\Scripts\python.exe -m pip install --quiet "pywebview>=5.0"
+if ($LASTEXITCODE -ne 0) { Write-Host "Note: the app window part (pywebview) did not install, so Job Hunter will open in your browser instead." }
 
-# Launcher: starts the app and keeps its window open while you use it.
+# Launcher: opens Job Hunter in its own window (no browser, no console). Closing the window stops it.
+$pythonw = Join-Path $PSScriptRoot ".venv\Scripts\pythonw.exe"
 $launcher = Join-Path $PSScriptRoot "Job Hunter.cmd"
 Set-Content -Path $launcher -Encoding ASCII -Value @(
     "@echo off",
     "cd /d ""%~dp0""",
-    "title Job Hunter - close this window to stop the app",
-    ".venv\Scripts\streamlit.exe run app.py"
+    "start """" "".venv\Scripts\pythonw.exe"" desktop.py"
 )
 
 $desktop = [Environment]::GetFolderPath("Desktop")
-foreach ($pair in @(,@("Job Hunter", $launcher))) {
-    $shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut((Join-Path $desktop "$($pair[0]).lnk"))
-    $shortcut.TargetPath = $pair[1]
-    $shortcut.WorkingDirectory = $PSScriptRoot
-    $shortcut.Save()
-}
+$shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut((Join-Path $desktop "Job Hunter.lnk"))
+$shortcut.TargetPath = $pythonw
+$shortcut.Arguments = "desktop.py"
+$shortcut.WorkingDirectory = $PSScriptRoot
+$shortcut.IconLocation = (Join-Path $PSScriptRoot "assets\icon.ico")
+$shortcut.Save()
 
 $data = Join-Path $env:LOCALAPPDATA "JobHunter"
 Write-Host ""
-Write-Host "Done. Double-click 'Job Hunter' on your Desktop to start it (it opens at http://localhost:8501)."
+Write-Host "Done. Double-click 'Job Hunter' on your Desktop. It opens in its own window, straight to your Home dashboard."
 Write-Host "The resume builder is the 'Resume builder' tab inside Job Hunter."
 Write-Host "Your profile, resume and jobs are kept in $data, separate from this folder."
