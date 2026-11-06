@@ -311,7 +311,7 @@ with jobs_tab:
         ], sort_by)
         table = pd.DataFrame(
             [{
-                "Fit": j["score"], "Title": ("🆕 " if j["key"] in fresh_keys else "") + j["title"], "Company": j["company"],
+                "Fit": j["score"], "Verdict": theme.fit_label(j["score"]), "Title": ("🆕 " if j["key"] in fresh_keys else "") + j["title"], "Company": j["company"],
                 "Track": j["track"], "Level": level[j["key"]],
                 "Pay": money(j["salary_min"], j["salary_max"]), "Clearance": j["clearance"] or "None",
                 "Location": j["location"], "Status": j["status"], "Applied": j.get("applied_at") or "",
@@ -323,9 +323,10 @@ with jobs_tab:
         st.caption(f"{len(shown)} of {len(jobs)} jobs. Tick rows to compare them or see details.")
         st.download_button("Export my pipeline (CSV)", job_filters.pipeline_csv(jobs), "job_pipeline.csv", "text/csv",
                            help="Saved, Applied, Interviewing and Offer jobs, for a spreadsheet.")
+        styled = table.style.map(theme.fit_styles, subset=["Fit"]).map(theme.status_styles, subset=["Status"]) if len(table) else table
         picked = st.dataframe(
-            table, hide_index=True, width="stretch", on_select="rerun", selection_mode="multi-row",
-            column_config={"Fit": st.column_config.ProgressColumn("Fit", min_value=0, max_value=100, format="%d")},
+            styled, hide_index=True, width="stretch", on_select="rerun", selection_mode="multi-row",
+            column_config={"Fit": st.column_config.NumberColumn("Fit", format="%d", help="0 to 100. Green is a strong fit, yellow is worth a look, grey is a long shot.")},
         )
         st.session_state["picked"] = [shown[i]["key"] for i in picked.selection.rows]
         if st.session_state["picked"] and st.button(f"Mark {len(st.session_state['picked'])} selected as applied"):
