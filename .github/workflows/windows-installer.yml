@@ -5,6 +5,9 @@ on:
     paths: [ "desktop.py", "app.py", "job_hunter/**", "assets/**", ".streamlit/**", "packaging/**", "requirements.txt", ".github/workflows/windows-installer.yml" ]
   workflow_dispatch:
 
+permissions:
+  contents: write  # lets a manual run publish the installer as a GitHub Release
+
 jobs:
   build:
     runs-on: windows-latest
@@ -37,3 +40,11 @@ jobs:
         with:
           name: JobHunter-Setup
           path: installer/JobHunter-Setup.exe
+      - name: Publish a GitHub Release (manual runs only)
+        if: github.event_name == 'workflow_dispatch'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "installer-$($env:GITHUB_RUN_NUMBER)"
+          gh release create $tag installer/JobHunter-Setup.exe --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --title "Job Hunter installer $($env:GITHUB_RUN_NUMBER)" --notes "Windows installer built from commit $($env:GITHUB_SHA.Substring(0,7)). Download JobHunter-Setup.exe below, double-click it, and see the README's Share this app section."
