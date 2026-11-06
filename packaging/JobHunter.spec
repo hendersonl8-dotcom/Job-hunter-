@@ -4,7 +4,10 @@ from PyInstaller.utils.hooks import collect_all, collect_submodules
 
 ROOT = os.path.dirname(SPECPATH)  # spec paths resolve against the spec folder
 
-datas = [(os.path.join(ROOT, n), n if os.path.isdir(os.path.join(ROOT, n)) else ".") for n in ("app.py", "config", "shortlists", ".streamlit", "assets")]
+# Only code, settings and assets ship. config/resume.json, config/profile.json and shortlists/ hold the
+# original author's own resume, contact details and job lists, so they are deliberately left out.
+datas = [(os.path.join(ROOT, n), n if os.path.isdir(os.path.join(ROOT, n)) else ".") for n in ("app.py", ".streamlit", "assets")]
+datas.append((os.path.join(ROOT, "config", "settings.toml"), "config"))
 binaries, hiddenimports = [], collect_submodules("job_hunter")  # app.py is data, so list its imports here
 for pkg in ("streamlit", "webview", "anthropic", "docx", "fpdf", "pypdf", "pandas"):
     try:
