@@ -15,35 +15,31 @@ Pick any job and it tailors your resume and writes a cover letter for that posti
 - **Writes a cover letter** for the job from the same facts, exported as Word and PDF.
 - **Apply button:** asks you to confirm before anything happens, hands you the tailored resume and cover letter to download, marks the job Applied with today's date, and opens the employer's application page. You do the final submit on their site, so nothing is ever sent in your name without you seeing it.
 
-## Install on Windows
+## Install (Windows)
 
-**As a regular app (no Python needed):** run `JobHunter-Setup.exe` (built by the *Windows installer* GitHub Actions job, or locally with `packaging\build.ps1`). It adds Job Hunter to the Start Menu and Desktop; double-click it and the app opens in its own window. Closing the window stops it. Your data stays in `%LOCALAPPDATA%\JobHunter`.
+Job Hunter is installed with **`JobHunter-Setup.exe`**. That is the one version of the app; there is nothing else to set up and no Python needed.
 
-**From source:**
+1. Open the repository on GitHub, click **Releases** on the right, and download `JobHunter-Setup.exe` from the newest release.
+2. Run it. Windows may show a blue "Windows protected your PC" box because the installer isn't signed: click **More info**, then **Run anyway**.
+3. Double-click **Job Hunter** on the Desktop or in the Start Menu. It opens in its own window, and closing the window stops it.
 
-1. Install Python 3.11 or newer from https://www.python.org/downloads/ (tick **Add python.exe to PATH**).
-2. Download this project (green **Code** button, **Download ZIP**, then unzip) or `git clone` it.
-3. In PowerShell, in the project folder:
+Your data stays in `%LOCALAPPDATA%\JobHunter`, so installing a newer version over the old one keeps everything. To update, download the newest `JobHunter-Setup.exe` from Releases and run it again.
+
+No release yet? The repository owner makes one under **Actions**, *Windows installer*, **Run workflow**: it builds the installer and publishes it as a release. (Pull-request runs only keep it under **Artifacts**.)
+
+## Resume Builder
+
+The **Resume Builder** is a tab inside Job Hunter. Every role and project from your master resume gets a dropdown: pick the points you want, in the order you want them, reword any of them, or add a point of your own. The preview beside it updates as you go, and **Download Word** or **Download PDF** gives you the finished file (Word is best if you want to keep editing). Save a set of picks as a named draft to come back to it. It reads your master resume but never changes it, and drafts are kept with your profile in `resume_drafts\`.
+
+## For developers
+
+Running from the source code is only for changing the app. You need Python 3.11 or newer; then, in PowerShell in the project folder:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
-That creates the virtual environment, installs the requirements and puts a **Job Hunter** shortcut on your Desktop. Double-click it to start the app, then open `http://localhost:8501` if the browser doesn't open by itself. Closing the black window stops the app. To update later, replace the project files (or `git pull`) and run the installer again; your data is not touched.
-
-Prefer to do it by hand? `py -3 -m venv .venv`, then `.venv\Scripts\python -m pip install -r requirements.txt`, then `.venv\Scripts\streamlit run app.py`.
-
-## Resume builder
-
-A separate app, just for building and editing your resume. Every role and project from your master resume gets a dropdown: pick the points you want, in the order you want them, reword any of them, or add a point of your own. The resume preview beside it updates as you go, and **Download Word** or **Download PDF** gives you the finished file (Word is best if you want to keep editing). Save a set of picks as a named draft to come back to it. It reads your master resume but never changes it, and drafts are kept with your profile in `resume_drafts\`.
-
-Start it with the **Resume Builder** shortcut that `install.ps1` puts on your Desktop, or in PowerShell from the project folder:
-
-```powershell
-.venv\Scripts\streamlit run resume_builder.py --server.port 8502
-```
-
-It opens at `http://localhost:8502`, so it can run next to the Job Hunter dashboard (`http://localhost:8501`).
+That creates the virtual environment, installs the requirements and puts shortcuts on your Desktop. By hand: `py -3 -m venv .venv`, `.venv\Scripts\python -m pip install -r requirements.txt`, then `.venv\Scripts\streamlit run app.py` (opens at `http://localhost:8501`). Build the installer locally with `packaging\build.ps1`.
 
 ## Where your data lives
 
@@ -74,7 +70,7 @@ If a request is declined by Claude's safety checks, it is retried automatically 
 
 Job Hunter isn't only for IT: it builds everything from the resume you give it, in any field.
 
-1. Install it (the Windows installer, or from source) and open it. A new user's data folder starts empty, so the welcome screen appears.
+1. Install it with `JobHunter-Setup.exe` and open it. A new user's data folder starts empty, so the welcome screen appears.
 2. **Connect Claude:** paste your own Claude API key (the screen walks you through getting one). Resume reading, tailoring and letters are billed to your account, roughly 10 to 20 cents per tailored resume.
 3. **Upload your resume** (PDF or Word). Claude reads it and proposes your job families, search terms and skills, using only what the resume says. Anything it can't find in your text is dropped or flagged.
 4. **Review and edit** the job families, skills, places to look, lowest pay and remote setting. Untick any job family you don't want.
@@ -91,7 +87,7 @@ Press **Save and start**. Scoring, search terms and places all come from your re
 
 Give Job Hunter to a friend or family member in a few steps. Nothing of yours goes with it.
 
-1. **Get the installer.** Open the repository on GitHub, click **Releases** on the right, and download `JobHunter-Setup.exe` from the newest release. (To make a new release: **Actions**, *Windows installer*, **Run workflow**; it builds the installer and publishes it as a release. Pull-request runs only keep it under **Artifacts**.) Send that file, or share the repository link and let them build it. Don't send your data folder.
+1. **Get the installer.** Open the repository on GitHub, click **Releases** on the right, and download `JobHunter-Setup.exe` from the newest release. (To make a new release: **Actions**, *Windows installer*, **Run workflow**; it builds the installer and publishes it as a release. Pull-request runs only keep it under **Artifacts**.) Send that file or the Releases link. Don't send your data folder.
 2. **They install it.** Windows may show a blue "Windows protected your PC" box because the installer isn't signed: **More info**, then **Run anyway**. It adds Job Hunter to the Start Menu and Desktop.
 3. **Same PC, different person?** Open the app, find **Profile** at the top of the sidebar, open **Add a profile**, type their name and press **Add profile**. They get the welcome screen and their own resume, jobs and settings. Pick a name in the Profile picker to switch. Your profile is never shown to them unless they pick it.
 4. **Their own PC?** Nothing to set up: a new PC starts at the welcome screen.
@@ -126,7 +122,7 @@ Jobs outside your locations (set in your `profile.json`) are left out. A wrong b
 
 `profile.json` in your data folder holds your clearance, pay floor, locations, the title words for each track, and your skills. Each skill has the words that detect it in a posting, whether you **have** it, and a **weight** from 1 to 3. When you earn something, such as Security+ or AZ-104, set `"have": true` and press **Re-score saved jobs**.
 
-## Tests
+## Tests (developers)
 
 ```powershell
 .venv\Scripts\python -m pip install -r requirements-dev.txt
