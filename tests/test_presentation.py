@@ -59,3 +59,12 @@ def test_theme_css_keeps_selected_chips_and_segments_coloured():
             continue
         assert "[data-baseweb='tag']" in css
         assert "stBaseButton-segmented_controlActive" in css
+
+
+def test_theme_css_styles_link_buttons_and_dropdowns():
+    from job_hunter import themes
+    for name in themes.THEMES:
+        if name == themes.DEFAULT:
+            continue
+        css = themes.css(name)
+        assert "stBaseLinkButton" in css and "[data-baseweb='popover']" in css

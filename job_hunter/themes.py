@@ -84,4 +84,16 @@ def css(name: str) -> str:
         f".stApp [data-testid='stBaseButton-segmented_control']{{background:{t['panel']}; color:{t['text']};"
         f" border-color:{t['line']};}}"
         f".stApp [data-testid='stBaseButton-segmented_control'] *{{background:transparent; color:{t['text']};}}"
+        # Link buttons ("Open posting") are anchors, not buttons, so the button rules above missed them.
+        f".stApp a[data-testid^='stBaseLinkButton'],.stApp a[data-testid^='stBaseLinkButton'] *"
+        f"{{background:{t['panel']}; color:{t['text']} !important; border-color:{t['line']};}}"
+        f".stApp a[data-testid='stBaseLinkButton-primary'],.stApp a[data-testid='stBaseLinkButton-primary'] *"
+        f"{{background:{t['accent']}; color:{on_accent} !important;}}"
+        # Select boxes: the arrow cell and the open dropdown list (which Streamlit draws outside .stApp).
+        f".stApp [data-baseweb='select'] svg{{fill:{t['text']}; color:{t['text']};}}"
+        f"[data-baseweb='popover'],[data-baseweb='popover'] [data-baseweb='menu'],"
+        f"[data-baseweb='popover'] ul,[data-baseweb='popover'] li"
+        f"{{background:{t['panel']}; color:{t['text']};}}"
+        f"[data-baseweb='popover'] li:hover,[data-baseweb='popover'] [aria-selected='true']"
+        f"{{background:{t['line']};}}"
     )
