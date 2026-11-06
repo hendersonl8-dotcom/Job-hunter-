@@ -23,6 +23,17 @@ BANDS = [
     (0, "Long shot", "#E2E8F0", "#334155"),
 ]
 
+FIT_ICONS = {"Strong fit": "🟢", "Worth a look": "🟡", "Long shot": "⚪"}
+
+# Pale fill + dark text, like the fit bands, so a table cell reads the same in every theme.
+STATUS_CHIPS = {
+    "Saved": ("#E2E8F0", "#334155"),
+    "Applied": ("#CCFBF1", "#134E4A"),
+    "Interviewing": ("#FEF3C7", "#78350F"),
+    "Offer": ("#DCFCE7", "#14532D"),
+    "Rejected": ("#FEE2E2", "#7F1D1D"),
+}
+
 STAGES = ["Saved", "Applied", "Interviewing", "Offer"]
 # CSS variables, set per theme by themes.css, so cards and headings follow the chosen colours.
 STAGE_COLORS = {stage: f"var(--jh-{stage.lower()})" for stage in STAGES}
@@ -40,7 +51,14 @@ CSS = """
 .jh-card .t {font-weight:600; line-height:1.25;}
 .jh-card .c {color:var(--jh-muted); font-size:.85rem;}
 .jh-stage {font-weight:700; padding-bottom:4px; margin-bottom:8px; border-bottom:3px solid;}
-.jh-empty {color:#94A3B8; font-size:.85rem; font-style:italic;}
+.jh-empty {color:var(--jh-muted); font-size:.85rem; font-style:italic; border:1px dashed var(--jh-line);
+           border-radius:8px; padding:8px 10px;}
+.jh-next {border:1px solid var(--jh-line); border-left:6px solid var(--jh-accent); border-radius:10px;
+          padding:12px 16px; margin:0 0 1rem 0; background:var(--jh-card); color:var(--jh-text);}
+.jh-next .k {color:var(--jh-muted); font-size:.75rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase;}
+.jh-next .m {font-size:1.1rem; font-weight:600; margin-top:2px;}
+.jh-next .h {color:var(--jh-muted); font-size:.9rem; margin-top:2px;}
+.jh-stage-help {color:var(--jh-muted); font-size:.8rem; margin:-4px 0 8px 0;}
 </style>
 """
 
@@ -51,6 +69,22 @@ def band(score: int) -> tuple[str, str, str]:
         if score >= minimum:
             return label, bg, fg
     return BANDS[-1][1:]
+
+
+def fit_label(score: int) -> str:
+    """Plain-text fit chip for tables, e.g. '🟢 Strong fit'. The emoji keeps it readable without any CSS."""
+    return f"{FIT_ICONS[band(score)[0]]} {band(score)[0]}"
+
+
+def fit_styles(score: int) -> str:
+    """CSS for a table cell holding this score: the same pale fill and dark text as the chips."""
+    _, bg, fg = band(score)
+    return f"background-color:{bg}; color:{fg}; font-weight:600"
+
+
+def status_styles(status: str) -> str:
+    bg, fg = STATUS_CHIPS.get(status, ("", ""))
+    return f"background-color:{bg}; color:{fg}; font-weight:600" if bg else ""
 
 
 def badge(score: int) -> str:
